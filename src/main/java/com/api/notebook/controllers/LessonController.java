@@ -43,15 +43,12 @@ public class LessonController {
     public ResponseEntity<Object> getAllLessons(
             @RequestParam(value = "notebookId", required = false) Long notebookId) {
         var lessonList = lessonService.findAllLessons();
-        if (!lessonList.isEmpty()) {
-            if (notebookId != null) { //Verify if the param exists
+        if (notebookId != null) { //Verify if the param exists
 
-                //If so, it returns a list of lessons based on this notebook id
-                return ResponseEntity.ok(lessonService.findAllLessonsByNotebookId(lessonList, notebookId));
-            }
-            return ResponseEntity.ok(lessonList);
+            //If so, it returns a list of lessons based on this notebook id
+            return ResponseEntity.ok(lessonService.findAllLessonsByNotebookId(lessonList, notebookId));
         }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        return ResponseEntity.ok(lessonList);
     }
 
     @GetMapping("/{lessonId}")

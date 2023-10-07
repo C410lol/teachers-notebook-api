@@ -7,15 +7,15 @@ import org.jetbrains.annotations.NotNull;
 public class WorkTypeWeights {
 
     @NotNull
-    private Integer tarefaWeight;
+    private Double tarefaWeight;
 
     @NotNull
-    private Integer trabalhoWeight;
+    private Double provasWeight;
 
     @NotNull
-    private Integer participacaoWeight;
+    private Double participacaoWeight;
 
     @NotNull
-    private Integer simuladoWeight;
+    private Double simuladoWeight;
 
 }

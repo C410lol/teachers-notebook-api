@@ -1,18 +1,16 @@
-package com.api.notebook.services;
+package com.api.notebook.utils;
 
 import com.api.notebook.models.FinalAverageModel;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
 
-@Service
-public class ExcelService {
+public class ExcelUtils {
 
     public static @NotNull ByteArrayOutputStream createFinalAverageExcelTable(
             @NotNull List<FinalAverageModel> finalAverageList) {
@@ -58,6 +56,10 @@ public class ExcelService {
     }
 
     private static void createSheetRow(@NotNull Row row, int index, Integer value) {
+        row.createCell(index).setCellValue(value);
+    }
+
+    private static void createSheetRow(@NotNull Row row, int index, Double value) {
         row.createCell(index).setCellValue(value);
     }
 

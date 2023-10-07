@@ -25,7 +25,6 @@ public class StudentController {
         var studentEntity = new StudentEntity();
         BeanUtils.copyProperties(studentDto, studentEntity);
         studentService.saveStudent(studentEntity);
-        System.out.println("Student created!");
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 

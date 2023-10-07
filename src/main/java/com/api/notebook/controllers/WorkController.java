@@ -36,13 +36,10 @@ public class WorkController {
     public ResponseEntity<Object> getAllWorks(
             @RequestParam(value = "notebookId", required = false) Long notebookId) {
         var workList = workService.findAllWorks();
-        if (!workList.isEmpty()) {
-            if (notebookId != null) { //Check if the param exists
-                return ResponseEntity.ok(workService.findAllWorksByNotebookId(workList, notebookId));
-            }
-            return ResponseEntity.ok(workList);
+        if (notebookId != null) { //Check if the param exists
+            return ResponseEntity.ok(workService.findAllWorksByNotebookId(workList, notebookId));
         }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        return ResponseEntity.ok(workList);
     }
 
     @GetMapping("/{workId}")

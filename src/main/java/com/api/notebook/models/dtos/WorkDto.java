@@ -18,7 +18,7 @@ public class WorkDto {
 
     private String observations;
 
-    @NotBlank
+    @NotNull
     private WorksEnum type;
 
     @NotNull

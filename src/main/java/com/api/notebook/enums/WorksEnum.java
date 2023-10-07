@@ -2,8 +2,8 @@ package com.api.notebook.enums;
 
 public enum WorksEnum {
 
-    TAREFA,
     TRABALHO,
+    PROVA,
     PARTIÇIPAÇÃO,
     SIMULADO
 

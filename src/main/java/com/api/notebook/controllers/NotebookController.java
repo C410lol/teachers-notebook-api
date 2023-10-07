@@ -48,15 +48,12 @@ public class NotebookController {
     public ResponseEntity<Object> getAllNotebooks(
             @RequestParam(value = "teacherId", required = false) UUID teacherId) {
         var notebookList = notebookService.findAllNotebooks();
-        if (!notebookList.isEmpty()) {
-            if (teacherId != null) { //Verify if param exists
+        if (teacherId != null) { //Verify if param exists
 
-                //If exists, it returns a list based on this 'teacherId' param
-                return ResponseEntity.ok(notebookService.findAllNotebooksByTeacherId(notebookList, teacherId));
-            }
-            return ResponseEntity.ok(notebookList);
+            //If exists, it returns a list based on this 'teacherId' param
+            return ResponseEntity.ok(notebookService.findAllNotebooksByTeacherId(notebookList, teacherId));
         }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        return ResponseEntity.ok(notebookList);
     }
 
     @GetMapping("/{notebookId}")
@@ -93,7 +90,7 @@ public class NotebookController {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Caderneta não encontrada!");
     }
 
-    @GetMapping("/finalize/{notebookId}")
+    @PutMapping("/finalize/{notebookId}")
     public ResponseEntity<Object> finalizeNotebook(
             @PathVariable(value = "notebookId") Long notebookId,
             @RequestBody @Valid WorkTypeWeights workTypeWeights) {
