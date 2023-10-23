@@ -4,15 +4,17 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.UUID;
+
 @Entity
 @Data
 @Table(name = "grades")
 public class GradeEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id")
-    private Long id;
+    private UUID id;
 
     @Column(name = "grade")
     private Double grade;

@@ -9,10 +9,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 @Entity
 @Data
@@ -20,9 +17,9 @@ import java.util.List;
 public class NotebookEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id")
-    private Long id;
+    private UUID id;
 
     @Column(name = "classe")
     @Enumerated(value = EnumType.STRING)
