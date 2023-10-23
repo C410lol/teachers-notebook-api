@@ -7,10 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -28,7 +25,7 @@ public class WorkService {
         return workList;
     }
 
-    public List<WorkEntity> findAllWorksByNotebookId(@NotNull List<WorkEntity> works, Long notebookId) {
+    public List<WorkEntity> findAllWorksByNotebookId(@NotNull List<WorkEntity> works, UUID notebookId) {
         List<WorkEntity> notebookWorks = new ArrayList<>();
         for (WorkEntity work:
                 works) {
@@ -39,15 +36,15 @@ public class WorkService {
         return notebookWorks;
     }
 
-    public Optional<WorkEntity> findWorkById(Long id) {
+    public Optional<WorkEntity> findWorkById(UUID id) {
         return workRepository.findById(id);
     }
 
-    public void deleteWorkById(Long id) {
+    public void deleteWorkById(UUID id) {
         workRepository.deleteById(id);
     }
 
-    public void setGradeToWork(Long workId, @NotNull GradeEntity grade) { //Set grade to a work
+    public void setGradeToWork(UUID workId, @NotNull GradeEntity grade) { //Set grade to a work
         var workOptional = findWorkById(workId);
         if(workOptional.isPresent()) {
             for (GradeEntity gradeLoop:

@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -26,9 +27,8 @@ public class LessonController {
     private final NotebookService notebookService;
 
     @PostMapping("/create") //POST endpoint to create a lesson entity
-    public ResponseEntity<Object> createLesson(@RequestParam(value = "notebookId") Long notebookId,
+    public ResponseEntity<Object> createLesson(@RequestParam(value = "notebookId") UUID notebookId,
                                                @RequestBody @Valid @NotNull LessonDto lessonDto) {
-        System.out.println("Accessed");
         var lessonEntity = new LessonEntity();
         BeanUtils.copyProperties(lessonDto, lessonEntity);
         if (lessonEntity.getDate() == null) {
@@ -41,7 +41,7 @@ public class LessonController {
 
     @GetMapping("/all") //GET endpoint to get all lessons
     public ResponseEntity<Object> getAllLessons(
-            @RequestParam(value = "notebookId", required = false) Long notebookId) {
+            @RequestParam(value = "notebookId", required = false) UUID notebookId) {
         var lessonList = lessonService.findAllLessons();
         if (notebookId != null) { //Verify if the param exists
 
@@ -52,7 +52,7 @@ public class LessonController {
     }
 
     @GetMapping("/{lessonId}")
-    public ResponseEntity<Object> getLessonById(@PathVariable(value = "lessonId") Long lessonId) {
+    public ResponseEntity<Object> getLessonById(@PathVariable(value = "lessonId") UUID lessonId) {
         var lessonOptional = lessonService.findLessonById(lessonId);
         if (lessonOptional.isPresent()) {
             return ResponseEntity.ok(lessonOptional.get());
@@ -61,7 +61,7 @@ public class LessonController {
     }
 
     @PutMapping("/edit/{lessonId}")
-    public ResponseEntity<Object> editLesson(@PathVariable(value = "lessonId") Long lessonId,
+    public ResponseEntity<Object> editLesson(@PathVariable(value = "lessonId") UUID lessonId,
                                                @RequestBody @Valid LessonDto lessonDto) {
         var lessonOptional = lessonService.findLessonById(lessonId);
         if (lessonOptional.isPresent()) {
@@ -75,7 +75,7 @@ public class LessonController {
     }
 
     @DeleteMapping("/delete/{lessonId}")
-    public ResponseEntity<Object> deleteLesson(@PathVariable(value = "lessonId") Long lessonId) {
+    public ResponseEntity<Object> deleteLesson(@PathVariable(value = "lessonId") UUID lessonId) {
         var lessonOptional = lessonService.findLessonById(lessonId);
         if (lessonOptional.isPresent()) {
             lessonService.deleteLessonById(lessonId);

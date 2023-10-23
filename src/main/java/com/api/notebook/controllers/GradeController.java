@@ -15,6 +15,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/grades")
@@ -25,7 +27,7 @@ public class GradeController {
     private final StudentService studentService;
 
     @PostMapping("/create") //POST endpoint to create a grade entity
-    public ResponseEntity<Object> createGrade(@RequestParam(value = "workId") Long workId,
+    public ResponseEntity<Object> createGrade(@RequestParam(value = "workId") UUID workId,
                                                    @RequestBody @Valid @NotNull GradeDto gradeDto) {
         var gradeEntity = new GradeEntity();
         BeanUtils.copyProperties(gradeDto, gradeEntity);
@@ -37,7 +39,7 @@ public class GradeController {
 
     @GetMapping("/all") //GET endpoint to get all grades
     public ResponseEntity<Object> getAllGrades(
-            @RequestParam(value = "workId", required = false) Long workId) {
+            @RequestParam(value = "workId", required = false) UUID workId) {
         var gradeList = gradeService.findAllGrades();
         if (!gradeList.isEmpty()) {
             if (workId != null) {

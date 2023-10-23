@@ -7,10 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -28,7 +25,7 @@ public class LessonService {
         return lessonList;
     }
 
-    public List<LessonEntity> findAllLessonsByNotebookId(@NotNull List<LessonEntity> lessons, Long notebookId) {
+    public List<LessonEntity> findAllLessonsByNotebookId(@NotNull List<LessonEntity> lessons, UUID notebookId) {
         List<LessonEntity> notebookLessons = new ArrayList<>();
         for (LessonEntity lesson:
                 lessons) {
@@ -39,16 +36,16 @@ public class LessonService {
         return notebookLessons;
     }
 
-    public Optional<LessonEntity> findLessonById(Long id) {
+    public Optional<LessonEntity> findLessonById(UUID id) {
         return lessonRepository.findById(id);
     }
 
-    public void deleteLessonById(Long id) {
+    public void deleteLessonById(UUID id) {
         lessonRepository.deleteById(id);
     }
 
     //Set attendance to a lesson
-    public void setAttendanceToLesson(Long lessonId, @NotNull AttendanceEntity attendance, int index) {
+    public void setAttendanceToLesson(UUID lessonId, @NotNull AttendanceEntity attendance, int index) {
         var lessonOptional = findLessonById(lessonId);
         if (lessonOptional.isPresent()) {
 

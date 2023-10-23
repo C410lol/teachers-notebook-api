@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -24,7 +25,7 @@ public class GradeService {
         return gradeRepository.findAll();
     }
 
-    public List<GradeEntity> findAllGradesByWorkId(@NotNull List<GradeEntity> grades, Long workId) {
+    public List<GradeEntity> findAllGradesByWorkId(@NotNull List<GradeEntity> grades, UUID workId) {
         List<GradeEntity> workGrades = new ArrayList<>();
         for (GradeEntity grade:
                 grades) {
@@ -35,11 +36,11 @@ public class GradeService {
         return workGrades;
     }
 
-    public Optional<GradeEntity> findGradeById(Long id) {
+    public Optional<GradeEntity> findGradeById(UUID id) {
         return gradeRepository.findById(id);
     }
 
-    public void deleteGradeById(Long id) {
+    public void deleteGradeById(UUID id) {
         gradeRepository.deleteById(id);
     }
 

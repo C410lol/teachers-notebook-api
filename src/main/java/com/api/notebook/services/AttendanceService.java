@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -26,7 +27,7 @@ public class AttendanceService {
 
     public List<AttendanceEntity> findAllAttendancesByLessonId(
             @NotNull List<AttendanceEntity> attendances,
-            Long lessonId
+            UUID lessonId
     ) {
         List<AttendanceEntity> lessonAttendances = new ArrayList<>();
         for (AttendanceEntity attendance:
@@ -38,11 +39,11 @@ public class AttendanceService {
         return lessonAttendances;
     }
 
-    public Optional<AttendanceEntity> findAttendanceById(Long id) {
+    public Optional<AttendanceEntity> findAttendanceById(UUID id) {
         return attendanceRepository.findById(id);
     }
 
-    public void deleteAttendanceById(Long id) {
+    public void deleteAttendanceById(UUID id) {
         attendanceRepository.deleteById(id);
     }
 

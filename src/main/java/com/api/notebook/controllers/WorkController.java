@@ -14,6 +14,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/works")
@@ -23,7 +25,7 @@ public class WorkController {
     private final NotebookService notebookService;
 
     @PostMapping("/create") //POST endpoint to create a work entity
-    public ResponseEntity<Object> createWork(@RequestParam(value = "notebookId") Long notebookId,
+    public ResponseEntity<Object> createWork(@RequestParam(value = "notebookId") UUID notebookId,
                                                @RequestBody @Valid @NotNull WorkDto workDto) {
         var workEntity = new WorkEntity();
         BeanUtils.copyProperties(workDto, workEntity);
@@ -34,7 +36,7 @@ public class WorkController {
 
     @GetMapping("/all") //GET endpoint to get all works
     public ResponseEntity<Object> getAllWorks(
-            @RequestParam(value = "notebookId", required = false) Long notebookId) {
+            @RequestParam(value = "notebookId", required = false) UUID notebookId) {
         var workList = workService.findAllWorks();
         if (notebookId != null) { //Check if the param exists
             return ResponseEntity.ok(workService.findAllWorksByNotebookId(workList, notebookId));
@@ -43,7 +45,7 @@ public class WorkController {
     }
 
     @GetMapping("/{workId}")
-    public ResponseEntity<Object> getWorkById(@PathVariable(value = "workId") Long workId) {
+    public ResponseEntity<Object> getWorkById(@PathVariable(value = "workId") UUID workId) {
         var workOptional = workService.findWorkById(workId);
         if (workOptional.isPresent()) {
             return ResponseEntity.ok(workOptional.get());
@@ -52,7 +54,7 @@ public class WorkController {
     }
 
     @PutMapping("/edit/{workId}")
-    public ResponseEntity<Object> editWork(@PathVariable(value = "workId") Long workId,
+    public ResponseEntity<Object> editWork(@PathVariable(value = "workId") UUID workId,
                                              @RequestBody @Valid WorkDto workDto) {
         var workOptional = workService.findWorkById(workId);
         if (workOptional.isPresent()) {
@@ -66,7 +68,7 @@ public class WorkController {
     }
 
     @DeleteMapping("/delete/{workId}")
-    public ResponseEntity<Object> deleteWork(@PathVariable(value = "workId") Long workId) {
+    public ResponseEntity<Object> deleteWork(@PathVariable(value = "workId") UUID workId) {
         var workOptional = workService.findWorkById(workId);
         if (workOptional.isPresent()) {
             workService.deleteWorkById(workId);

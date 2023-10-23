@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -24,7 +25,7 @@ public class AttendanceController {
     private final LessonService lessonService;
 
     @PostMapping("/create") //POST endpoint to create an attendance entity
-    public ResponseEntity<Object> createAttendance(@RequestParam(value = "lessonId") Long lessonId,
+    public ResponseEntity<Object> createAttendance(@RequestParam(value = "lessonId") UUID lessonId,
                                                    @RequestBody @Valid @NotNull List<AttendanceDto> attendanceDtos) {
         int currentIndex = 0;
         for(AttendanceDto attendanceDto:
@@ -41,7 +42,7 @@ public class AttendanceController {
 
     @GetMapping("/all") //GET endpoint to get all attendances
     public ResponseEntity<Object> getAllAttendances(
-            @RequestParam(value = "lessonId", required = false) Long lessonId
+            @RequestParam(value = "lessonId", required = false) UUID lessonId
     ) {
         var attendanceList = attendanceService.findAllAttendances();
         if (!attendanceList.isEmpty()) {

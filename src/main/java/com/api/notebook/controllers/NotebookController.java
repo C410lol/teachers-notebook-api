@@ -57,7 +57,7 @@ public class NotebookController {
     }
 
     @GetMapping("/{notebookId}")
-    public ResponseEntity<Object> getNotebookById(@PathVariable(value = "notebookId") Long notebookId) {
+    public ResponseEntity<Object> getNotebookById(@PathVariable(value = "notebookId") UUID notebookId) {
         var notebook = notebookService.findNotebookById(notebookId);
         if (notebook.isPresent()) {
             return ResponseEntity.ok(notebook.get());
@@ -66,7 +66,7 @@ public class NotebookController {
     }
 
     @PutMapping("/edit/{notebookId}")
-    public ResponseEntity<?> editNotebook(@PathVariable(value = "notebookId") Long notebookId,
+    public ResponseEntity<?> editNotebook(@PathVariable(value = "notebookId") UUID notebookId,
                                                @RequestBody @Valid NotebookDto notebookDto) {
         var notebookOptional = notebookService.findNotebookById(notebookId);
         if (notebookOptional.isPresent()) {
@@ -81,7 +81,7 @@ public class NotebookController {
     }
 
     @DeleteMapping("/delete/{notebookId}")
-    public ResponseEntity<?> deleteNotebook(@PathVariable(value = "notebookId") Long notebookId) {
+    public ResponseEntity<?> deleteNotebook(@PathVariable(value = "notebookId") UUID notebookId) {
         var notebookOptional = notebookService.findNotebookById(notebookId);
         if (notebookOptional.isPresent()) {
             notebookService.deleteNotebookById(notebookId);
@@ -92,7 +92,7 @@ public class NotebookController {
 
     @PutMapping("/finalize/{notebookId}")
     public ResponseEntity<Object> finalizeNotebook(
-            @PathVariable(value = "notebookId") Long notebookId,
+            @PathVariable(value = "notebookId") UUID notebookId,
             @RequestBody @Valid WorkTypeWeights workTypeWeights) {
         var file = notebookService.finalizeNotebook(notebookId, workTypeWeights);
         if (file != null) {

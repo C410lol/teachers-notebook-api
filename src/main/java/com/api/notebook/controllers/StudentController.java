@@ -12,6 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/students")
@@ -30,7 +32,7 @@ public class StudentController {
 
     @GetMapping("/all") //GET endpoint to get all students
     public ResponseEntity<Object> getAllStudents(
-            @RequestParam(value = "notebookId", required = false) Long notebookId) {
+            @RequestParam(value = "notebookId", required = false) UUID notebookId) {
         var studentList = studentService.findAllStudents();
         if (!studentList.isEmpty()) {
             if (notebookId != null) {

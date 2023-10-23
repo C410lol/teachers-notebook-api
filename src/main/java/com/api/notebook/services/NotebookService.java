@@ -44,26 +44,26 @@ public class NotebookService {
         return teacherNotebooks;
     }
 
-    public Optional<NotebookEntity> findNotebookById(Long id) {
+    public Optional<NotebookEntity> findNotebookById(UUID id) {
         return notebookRepository.findById(id);
     }
 
-    public void deleteNotebookById(Long id) {
+    public void deleteNotebookById(UUID id) {
         notebookRepository.deleteById(id);
     }
 
-    public void setLessonToNotebook(Long notebookId, @NotNull LessonEntity lesson) { //Set lesson to a notebook
+    public void setLessonToNotebook(UUID notebookId, @NotNull LessonEntity lesson) { //Set lesson to a notebook
         var notebookOptional = findNotebookById(notebookId);
         notebookOptional.ifPresent(lesson::setNotebook);
     }
 
-    public void setWorkToNotebook(Long notebookId, @NotNull WorkEntity work) { //Set work to a notebook
+    public void setWorkToNotebook(UUID notebookId, @NotNull WorkEntity work) { //Set work to a notebook
         var notebookOptional = findNotebookById(notebookId);
         notebookOptional.ifPresent(work::setNotebook);
     }
 
     //Finish notebook and return all students average
-    public ByteArrayResource finalizeNotebook(Long notebookId, WorkTypeWeights workTypeWeights) {
+    public ByteArrayResource finalizeNotebook(UUID notebookId, WorkTypeWeights workTypeWeights) {
         var notebook = findNotebookById(notebookId);
         if(notebook.isPresent()) {
             var allFinalAverageStudents = NotebookUtils.getAllFinalAverageStudents(notebook.get(), workTypeWeights);
