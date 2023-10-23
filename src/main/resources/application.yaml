@@ -1,5 +1,0 @@
-spring:
-  datasource:
-    url: jdbc:postgresql://teachers-notebook-database-01.czokl8h8oskz.sa-east-1.rds.amazonaws.com:5432/teachers_notebook
-    username: postgres
-    password: banco007
