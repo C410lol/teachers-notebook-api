@@ -4,6 +4,7 @@ import com.api.notebook.enums.BimesterEnum;
 import com.api.notebook.enums.ClassEnum;
 import com.api.notebook.enums.StatusEnum;
 import com.api.notebook.enums.SubjectEnum;
+import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -48,6 +49,7 @@ public class NotebookEntity {
     @JoinColumn(name = "teacher_id")
     private TeacherEntity teacher;
 
+    @JsonIgnore
     @ManyToMany
     @JoinTable(
             name = "notebooks_students",
@@ -55,10 +57,27 @@ public class NotebookEntity {
             inverseJoinColumns = {@JoinColumn(name = "student_id")})
     private List<StudentEntity> students;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "notebook", cascade = {CascadeType.ALL})
     private List<LessonEntity> lessons;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "notebook", cascade = {CascadeType.ALL})
     private List<WorkEntity> works;
+
+    @JsonGetter(value = "students")
+    public Integer getStudentsQuantity() {
+        return students.size();
+    }
+
+    @JsonGetter(value = "lessons")
+    public Integer getLessonsQuantity() {
+        return lessons.size();
+    }
+
+    @JsonGetter(value = "works")
+    public Integer getWorksQuantity() {
+        return works.size();
+    }
 
 }

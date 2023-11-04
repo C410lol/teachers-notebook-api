@@ -1,6 +1,7 @@
 package com.api.notebook.models.entities;
 
 import com.api.notebook.enums.WorksEnum;
+import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -40,7 +41,13 @@ public class WorkEntity {
     @JoinColumn(name = "notebook_id")
     private NotebookEntity notebook;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "work", cascade = {CascadeType.ALL})
     private List<GradeEntity> grades;
+
+    @JsonGetter(value = "grades")
+    public Integer getGradesQuantity() {
+        return grades.size();
+    }
 
 }

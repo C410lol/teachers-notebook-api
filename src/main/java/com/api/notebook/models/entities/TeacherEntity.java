@@ -1,6 +1,7 @@
 package com.api.notebook.models.entities;
 
 import com.api.notebook.enums.RoleEnum;
+import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -34,5 +35,10 @@ public class TeacherEntity {
     @JsonIgnore
     @OneToMany(mappedBy = "teacher", cascade = {CascadeType.ALL})
     private List<NotebookEntity> notebooks;
+
+    @JsonGetter(value = "notebooks")
+    public Integer getNotebooksQuantity() {
+        return notebooks.size();
+    }
 
 }

@@ -1,5 +1,6 @@
 package com.api.notebook.models.entities;
 
+import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -38,7 +39,13 @@ public class LessonEntity {
     @JoinColumn(name = "notebook_id")
     private NotebookEntity notebook;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "lesson", cascade = {CascadeType.ALL})
     private List<AttendanceEntity> attendances;
+
+    @JsonGetter(value = "attendances")
+    public Integer getAttendancesQuantity() {
+        return attendances.size();
+    }
 
 }
