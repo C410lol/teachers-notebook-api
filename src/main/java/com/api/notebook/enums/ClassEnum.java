@@ -2,6 +2,8 @@ package com.api.notebook.enums;
 
 public enum ClassEnum {
 
+    Ensino_Fundamental_5_A,
+    Ensino_Fundamental_5_B,
     Ensino_Fundamental_6_A,
     Ensino_Fundamental_6_B,
     Ensino_Fundamental_7_A,
