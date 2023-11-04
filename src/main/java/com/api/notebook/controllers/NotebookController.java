@@ -12,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.BeanUtils;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -46,14 +48,22 @@ public class NotebookController {
 
     @GetMapping("/all") //GET endpoint to get all notebooks
     public ResponseEntity<Object> getAllNotebooks(
-            @RequestParam(value = "teacherId", required = false) UUID teacherId) {
-        var notebookList = notebookService.findAllNotebooks();
+            @RequestParam(value = "teacherId", required = false) UUID teacherId,
+            @RequestParam(value = "pageNum", defaultValue = "0", required = false) String pageNum,
+            @RequestParam(value = "direction", defaultValue = "desc", required = false) String direction,
+            @RequestParam(value = "sortBy", defaultValue = "status", required = false) String sortBy
+    ) {
+        var pageable = PageRequest.of(
+                Integer.parseInt(pageNum),
+                10,
+                Sort.Direction.fromString(direction),
+                sortBy
+        );
         if (teacherId != null) { //Verify if param exists
-
             //If exists, it returns a list based on this 'teacherId' param
-            return ResponseEntity.ok(notebookService.findAllNotebooksByTeacherId(notebookList, teacherId));
+            return ResponseEntity.ok(notebookService.findAllNotebooksByTeacherId(teacherId, pageable));
         }
-        return ResponseEntity.ok(notebookList);
+        return ResponseEntity.ok(notebookService.findAllNotebooks());
     }
 
     @GetMapping("/{notebookId}")

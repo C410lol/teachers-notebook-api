@@ -32,18 +32,15 @@ public class StudentController {
 
     @GetMapping("/all") //GET endpoint to get all students
     public ResponseEntity<Object> getAllStudents(
-            @RequestParam(value = "notebookId", required = false) UUID notebookId) {
-        var studentList = studentService.findAllStudents();
-        if (!studentList.isEmpty()) {
-            if (notebookId != null) {
-                var optionalNotebook = notebookService.findNotebookById(notebookId);
-                if (optionalNotebook.isPresent()) {
-                    return ResponseEntity.ok(optionalNotebook.get().getStudents());
-                } else return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-            }
-            return ResponseEntity.ok(studentList);
+            @RequestParam(value = "notebookId", required = false) UUID notebookId
+    ) {
+        if (notebookId != null) {
+            var optionalNotebook = notebookService.findNotebookById(notebookId);
+            if (optionalNotebook.isPresent()) {
+                return ResponseEntity.ok(optionalNotebook.get().getStudents());
+            } else return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        return ResponseEntity.ok(studentService.findAllStudents());
     }
 
 }

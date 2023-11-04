@@ -5,6 +5,8 @@ import com.api.notebook.models.entities.LessonEntity;
 import com.api.notebook.repositories.LessonRepository;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -20,20 +22,11 @@ public class LessonService {
     }
 
     public List<LessonEntity> findAllLessons() {
-        var lessonList = lessonRepository.findAll();
-        lessonList.sort(Comparator.comparing(LessonEntity::getDate).reversed());
-        return lessonList;
+        return lessonRepository.findAll();
     }
 
-    public List<LessonEntity> findAllLessonsByNotebookId(@NotNull List<LessonEntity> lessons, UUID notebookId) {
-        List<LessonEntity> notebookLessons = new ArrayList<>();
-        for (LessonEntity lesson:
-                lessons) {
-            if (lesson.getNotebook().getId().equals(notebookId)) {
-                notebookLessons.add(lesson);
-            }
-        }
-        return notebookLessons;
+    public Page<LessonEntity> findAllLessonsByNotebookId(UUID notebookId, Pageable pageable) {
+        return lessonRepository.findByNotebookId(notebookId, pageable);
     }
 
     public Optional<LessonEntity> findLessonById(UUID id) {

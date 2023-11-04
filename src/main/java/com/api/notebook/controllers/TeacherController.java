@@ -35,11 +35,7 @@ public class TeacherController {
 
     @GetMapping("/all") //GET endpoint to get all teachers
     public ResponseEntity<Object> getAllTeachers() {
-        var teacherList = teacherService.findAllTeachers();
-        if (!teacherList.isEmpty()) {
-            return ResponseEntity.ok(teacherList);
-        }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        return ResponseEntity.ok(teacherService.findAllTeachers());
     }
 
     @GetMapping("/{teacherId}")

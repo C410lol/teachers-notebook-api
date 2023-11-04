@@ -44,14 +44,10 @@ public class AttendanceController {
     public ResponseEntity<Object> getAllAttendances(
             @RequestParam(value = "lessonId", required = false) UUID lessonId
     ) {
-        var attendanceList = attendanceService.findAllAttendances();
-        if (!attendanceList.isEmpty()) {
-            if(lessonId != null) {
-                return ResponseEntity.ok(attendanceService.findAllAttendancesByLessonId(attendanceList, lessonId));
-            }
-            return ResponseEntity.ok(attendanceList);
+        if(lessonId != null) {
+            return ResponseEntity.ok(attendanceService.findAllAttendancesByLessonId(lessonId));
         }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        return ResponseEntity.ok(attendanceService.findAllAttendances());
     }
 
 }

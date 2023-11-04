@@ -25,18 +25,8 @@ public class AttendanceService {
         return attendanceRepository.findAll();
     }
 
-    public List<AttendanceEntity> findAllAttendancesByLessonId(
-            @NotNull List<AttendanceEntity> attendances,
-            UUID lessonId
-    ) {
-        List<AttendanceEntity> lessonAttendances = new ArrayList<>();
-        for (AttendanceEntity attendance:
-                attendances) {
-            if (attendance.getLesson().getId().equals(lessonId)) {
-                lessonAttendances.add(attendance);
-            }
-        }
-        return lessonAttendances;
+    public List<AttendanceEntity> findAllAttendancesByLessonId(UUID lessonId) {
+        return attendanceRepository.findByLessonId(lessonId);
     }
 
     public Optional<AttendanceEntity> findAttendanceById(UUID id) {

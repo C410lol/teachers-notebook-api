@@ -5,6 +5,8 @@ import com.api.notebook.models.entities.WorkEntity;
 import com.api.notebook.repositories.WorkRepository;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -25,15 +27,8 @@ public class WorkService {
         return workList;
     }
 
-    public List<WorkEntity> findAllWorksByNotebookId(@NotNull List<WorkEntity> works, UUID notebookId) {
-        List<WorkEntity> notebookWorks = new ArrayList<>();
-        for (WorkEntity work:
-                works) {
-            if (work.getNotebook().getId().equals(notebookId)) {
-                notebookWorks.add(work);
-            }
-        }
-        return notebookWorks;
+    public Page<WorkEntity> findAllWorksByNotebookId(UUID notebookId, Pageable pageable) {
+        return workRepository.findByNotebookId(notebookId, pageable);
     }
 
     public Optional<WorkEntity> findWorkById(UUID id) {

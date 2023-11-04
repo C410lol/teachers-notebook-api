@@ -25,15 +25,8 @@ public class GradeService {
         return gradeRepository.findAll();
     }
 
-    public List<GradeEntity> findAllGradesByWorkId(@NotNull List<GradeEntity> grades, UUID workId) {
-        List<GradeEntity> workGrades = new ArrayList<>();
-        for (GradeEntity grade:
-                grades) {
-            if (grade.getWork().getId().equals(workId)) {
-                workGrades.add(grade);
-            }
-        }
-        return workGrades;
+    public List<GradeEntity> findAllGradesByWorkId(UUID workId) {
+        return gradeRepository.findByWorkId(workId);
     }
 
     public Optional<GradeEntity> findGradeById(UUID id) {

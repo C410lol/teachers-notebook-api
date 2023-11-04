@@ -11,6 +11,10 @@ import com.api.notebook.utils.NotebookUtils;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -26,22 +30,11 @@ public class NotebookService {
     }
 
     public List<NotebookEntity> findAllNotebooks() {
-        var notebookList = notebookRepository.findAll();
-        notebookList.sort(Comparator.comparing(NotebookEntity::getClasse));
-        notebookList.sort(Comparator.comparing(NotebookEntity::getStatus));
-        return notebookList;
+        return notebookRepository.findAll();
     }
 
-    //Find all notebooks of this particularly 'teacherId'
-    public List<NotebookEntity> findAllNotebooksByTeacherId(@NotNull List<NotebookEntity> notebooks, UUID teacherId) {
-        List<NotebookEntity> teacherNotebooks = new ArrayList<>();
-        for (NotebookEntity singleNotebook:
-                notebooks) {
-            if (singleNotebook.getTeacher().getId().equals(teacherId)) {
-                teacherNotebooks.add(singleNotebook);
-            }
-        }
-        return teacherNotebooks;
+    public Page<NotebookEntity> findAllNotebooksByTeacherId(UUID teacherId, Pageable pageable) {
+        return notebookRepository.findByTeacherId(teacherId, pageable);
     }
 
     public Optional<NotebookEntity> findNotebookById(UUID id) {

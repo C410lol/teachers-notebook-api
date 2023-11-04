@@ -39,15 +39,12 @@ public class GradeController {
 
     @GetMapping("/all") //GET endpoint to get all grades
     public ResponseEntity<Object> getAllGrades(
-            @RequestParam(value = "workId", required = false) UUID workId) {
-        var gradeList = gradeService.findAllGrades();
-        if (!gradeList.isEmpty()) {
-            if (workId != null) {
-                return ResponseEntity.ok(gradeService.findAllGradesByWorkId(gradeList, workId));
-            }
-            return ResponseEntity.ok(gradeList);
+            @RequestParam(value = "workId", required = false) UUID workId
+    ) {
+        if (workId != null) {
+            return ResponseEntity.ok(gradeService.findAllGradesByWorkId(workId));
         }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        return ResponseEntity.ok(gradeService.findAllGrades());
     }
 
 }

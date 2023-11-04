@@ -10,6 +10,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -36,12 +38,22 @@ public class WorkController {
 
     @GetMapping("/all") //GET endpoint to get all works
     public ResponseEntity<Object> getAllWorks(
-            @RequestParam(value = "notebookId", required = false) UUID notebookId) {
-        var workList = workService.findAllWorks();
+            @RequestParam(value = "notebookId", required = false) UUID notebookId,
+            @RequestParam(value = "pageNum", defaultValue = "0", required = false) String pageNum,
+            @RequestParam(value = "direction", defaultValue = "desc", required = false) String direction,
+            @RequestParam(value = "sortBy", defaultValue = "status", required = false) String sortBy
+    ) {
+        var pageable = PageRequest.of(
+                Integer.parseInt(pageNum),
+                10,
+                Sort.Direction.fromString(direction),
+                sortBy
+        );
         if (notebookId != null) { //Check if the param exists
-            return ResponseEntity.ok(workService.findAllWorksByNotebookId(workList, notebookId));
+            //If exists, it returns a list based on this 'notebookId' param
+            return ResponseEntity.ok(workService.findAllWorksByNotebookId(notebookId, pageable));
         }
-        return ResponseEntity.ok(workList);
+        return ResponseEntity.ok(workService.findAllWorks());
     }
 
     @GetMapping("/{workId}")

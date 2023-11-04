@@ -10,6 +10,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -41,14 +43,22 @@ public class LessonController {
 
     @GetMapping("/all") //GET endpoint to get all lessons
     public ResponseEntity<Object> getAllLessons(
-            @RequestParam(value = "notebookId", required = false) UUID notebookId) {
-        var lessonList = lessonService.findAllLessons();
+            @RequestParam(value = "notebookId", required = false) UUID notebookId,
+            @RequestParam(value = "pageNum", defaultValue = "0", required = false) String pageNum,
+            @RequestParam(value = "direction", defaultValue = "desc", required = false) String direction,
+            @RequestParam(value = "sortBy", defaultValue = "status", required = false) String sortBy
+    ) {
+        var pageable = PageRequest.of(
+                Integer.parseInt(pageNum),
+                10,
+                Sort.Direction.fromString(direction),
+                sortBy
+        );
         if (notebookId != null) { //Verify if the param exists
-
             //If so, it returns a list of lessons based on this notebook id
-            return ResponseEntity.ok(lessonService.findAllLessonsByNotebookId(lessonList, notebookId));
+            return ResponseEntity.ok(lessonService.findAllLessonsByNotebookId(notebookId, pageable));
         }
-        return ResponseEntity.ok(lessonList);
+        return ResponseEntity.ok(lessonService.findAllLessons());
     }
 
     @GetMapping("/{lessonId}")
