@@ -1,7 +1,11 @@
 package com.api.notebook.utils;
 
 import com.api.notebook.models.FinalAverageModel;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.jetbrains.annotations.NotNull;
@@ -20,17 +24,22 @@ public class ExcelUtils {
             var sheet = workBook.createSheet();
             var rowIndex = 0;
 
-            createSheetHeader(sheet, rowIndex++);
+            sheet.setColumnWidth(1, (362/7) * 256);
+
+            var cellStyleGlobal = workBook.createCellStyle();
+            cellStyleGlobal.setAlignment(HorizontalAlignment.CENTER);
+
+            createSheetHeader(workBook,sheet, cellStyleGlobal, rowIndex++);
 
             for (FinalAverageModel finalAverage:
                     finalAverageList) {
                 var row = sheet.createRow(rowIndex++);
-                createSheetRow(row, 0, finalAverage.getAttendanceNumber());
-                createSheetRow(row, 1, finalAverage.getName());
-                createSheetRow(row, 2, finalAverage.getAttendanceNumber());
-                createSheetRow(row, 3, finalAverage.getFinalGrade());
-                createSheetRow(row, 4, finalAverage.getAbsences());
-                createSheetRow(row, 5, finalAverage.getCompensatedAbsence());
+                createRowCell(row, 0, finalAverage.getAttendanceNumber(), cellStyleGlobal);
+                createRowCell(row, 1, finalAverage.getName(), cellStyleGlobal);
+                createRowCell(row, 2, finalAverage.getAttendanceNumber(), cellStyleGlobal);
+                createRowCell(row, 3, finalAverage.getFinalGrade(), cellStyleGlobal);
+                createRowCell(row, 4, finalAverage.getAbsences(), cellStyleGlobal);
+                createRowCell(row, 5, finalAverage.getCompensatedAbsence(), cellStyleGlobal);
             }
 
             workBook.write(byteArrayOutputStream);
@@ -41,26 +50,43 @@ public class ExcelUtils {
         }
     }
 
-    private static void createSheetHeader(@NotNull XSSFSheet sheet, int index) {
+    private static void createSheetHeader(
+            @NotNull XSSFWorkbook workbook,
+            @NotNull XSSFSheet sheet,
+            @NotNull XSSFCellStyle cellStyle,
+            int index) {
         var row = sheet.createRow(index);
-        createSheetRow(row, 0, "Nº CH");
-        createSheetRow(row, 1, "Nome");
-        createSheetRow(row, 2, "Nº");
-        createSheetRow(row, 3, "N");
-        createSheetRow(row, 4, "F");
-        createSheetRow(row, 5, "AC");
+
+        var cellStyleBold = workbook.createCellStyle();
+        var cellFont = workbook.createFont();
+        cellFont.setBold(true);
+        cellStyleBold.cloneStyleFrom(cellStyle);
+        cellStyleBold.setFont(cellFont);
+
+        createRowCell(row, 0, "Nº CH", cellStyleBold);
+        createRowCell(row, 1, "Nome", cellStyleBold);
+        createRowCell(row, 2, "Nº", cellStyleBold);
+        createRowCell(row, 3, "N", cellStyleBold);
+        createRowCell(row, 4, "F", cellStyleBold);
+        createRowCell(row, 5, "AC", cellStyleBold);
     }
 
-    private static void createSheetRow(@NotNull Row row, int index, String value) {
-        row.createCell(index).setCellValue(value);
+    private static void createRowCell(@NotNull Row row, int index, String value, CellStyle cellStyle) {
+        var cell = row.createCell(index);
+        cell.setCellValue(value);
+        cell.setCellStyle(cellStyle);
     }
 
-    private static void createSheetRow(@NotNull Row row, int index, Integer value) {
-        row.createCell(index).setCellValue(value);
+    private static void createRowCell(@NotNull Row row, int index, Integer value, CellStyle cellStyle) {
+        var cell = row.createCell(index);
+        cell.setCellValue(value);
+        cell.setCellStyle(cellStyle);
     }
 
-    private static void createSheetRow(@NotNull Row row, int index, Double value) {
-        row.createCell(index).setCellValue(value);
+    private static void createRowCell(@NotNull Row row, int index, Double value, CellStyle cellStyle) {
+        var cell = row.createCell(index);
+        cell.setCellValue(value);
+        cell.setCellStyle(cellStyle);
     }
 
 }
