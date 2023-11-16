@@ -14,6 +14,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -60,7 +61,11 @@ public class WorkController {
     public ResponseEntity<Object> getWorkById(@PathVariable(value = "workId") UUID workId) {
         var workOptional = workService.findWorkById(workId);
         if (workOptional.isPresent()) {
-            return ResponseEntity.ok(workOptional.get());
+            var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            if (workOptional.get().getNotebook().getTeacher().getId().equals(authenticationId)) {
+                return ResponseEntity.ok(workOptional.get());
+            }
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Trabalho/Tarefa não encontrada!");
     }
@@ -70,11 +75,15 @@ public class WorkController {
                                              @RequestBody @Valid WorkDto workDto) {
         var workOptional = workService.findWorkById(workId);
         if (workOptional.isPresent()) {
-            var workEntity = new WorkEntity();
-            BeanUtils.copyProperties(workOptional.get(), workEntity);
-            BeanUtils.copyProperties(workDto, workEntity);
-            workService.saveWork(workEntity);
-            return ResponseEntity.ok().build();
+            var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            if (workOptional.get().getNotebook().getTeacher().getId().equals(authenticationId)) {
+                var workEntity = new WorkEntity();
+                BeanUtils.copyProperties(workOptional.get(), workEntity);
+                BeanUtils.copyProperties(workDto, workEntity);
+                workService.saveWork(workEntity);
+                return ResponseEntity.ok().build();
+            }
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Trabalho/Tarefa não encontrada!");
     }
@@ -83,8 +92,12 @@ public class WorkController {
     public ResponseEntity<Object> deleteWork(@PathVariable(value = "workId") UUID workId) {
         var workOptional = workService.findWorkById(workId);
         if (workOptional.isPresent()) {
-            workService.deleteWorkById(workId);
-            return ResponseEntity.ok().build();
+            var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            if (workOptional.get().getNotebook().getTeacher().getId().equals(authenticationId)) {
+                workService.deleteWorkById(workId);
+                return ResponseEntity.ok().build();
+            }
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Trabalho/Tarefa não encontrada!");
     }

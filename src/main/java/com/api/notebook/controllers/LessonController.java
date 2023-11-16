@@ -14,6 +14,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -65,7 +66,11 @@ public class LessonController {
     public ResponseEntity<Object> getLessonById(@PathVariable(value = "lessonId") UUID lessonId) {
         var lessonOptional = lessonService.findLessonById(lessonId);
         if (lessonOptional.isPresent()) {
-            return ResponseEntity.ok(lessonOptional.get());
+            var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            if (lessonOptional.get().getNotebook().getTeacher().getId().equals(authenticationId)) {
+                return ResponseEntity.ok(lessonOptional.get());
+            }
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Aula não encontrada!");
     }
@@ -75,11 +80,15 @@ public class LessonController {
                                                @RequestBody @Valid LessonDto lessonDto) {
         var lessonOptional = lessonService.findLessonById(lessonId);
         if (lessonOptional.isPresent()) {
-            var lessonEntity = new LessonEntity();
-            BeanUtils.copyProperties(lessonOptional.get(), lessonEntity);
-            BeanUtils.copyProperties(lessonDto, lessonEntity);
-            lessonService.saveLesson(lessonEntity);
-            return ResponseEntity.ok().build();
+            var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            if (lessonOptional.get().getNotebook().getTeacher().getId().equals(authenticationId)) {
+                var lessonEntity = new LessonEntity();
+                BeanUtils.copyProperties(lessonOptional.get(), lessonEntity);
+                BeanUtils.copyProperties(lessonDto, lessonEntity);
+                lessonService.saveLesson(lessonEntity);
+                return ResponseEntity.ok().build();
+            }
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Aula não encontrada!");
     }
@@ -88,8 +97,12 @@ public class LessonController {
     public ResponseEntity<Object> deleteLesson(@PathVariable(value = "lessonId") UUID lessonId) {
         var lessonOptional = lessonService.findLessonById(lessonId);
         if (lessonOptional.isPresent()) {
-            lessonService.deleteLessonById(lessonId);
-            return ResponseEntity.ok().build();
+            var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            if (lessonOptional.get().getNotebook().getTeacher().getId().equals(authenticationId)) {
+                lessonService.deleteLessonById(lessonId);
+                return ResponseEntity.ok().build();
+            }
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Aula não encontrada!");
     }

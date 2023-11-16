@@ -18,6 +18,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -60,8 +61,12 @@ public class NotebookController {
                 sortBy
         );
         if (teacherId != null) { //Verify if param exists
-            //If exists, it returns a list based on this 'teacherId' param
-            return ResponseEntity.ok(notebookService.findAllNotebooksByTeacherId(teacherId, pageable));
+            var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            if (authenticationId.equals(teacherId)) {
+
+                //If exists, it returns a list based on this 'teacherId' param
+                return ResponseEntity.ok(notebookService.findAllNotebooksByTeacherId(teacherId, pageable));
+            }
         }
         return ResponseEntity.ok(notebookService.findAllNotebooks());
     }
@@ -70,7 +75,11 @@ public class NotebookController {
     public ResponseEntity<Object> getNotebookById(@PathVariable(value = "notebookId") UUID notebookId) {
         var notebook = notebookService.findNotebookById(notebookId);
         if (notebook.isPresent()) {
-            return ResponseEntity.ok(notebook.get());
+            var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            if (notebook.get().getTeacher().getId().equals(authenticationId)) {
+                return ResponseEntity.ok(notebook.get());
+            }
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Caderneta não encontrada!");
     }
@@ -80,12 +89,16 @@ public class NotebookController {
                                                @RequestBody @Valid NotebookDto notebookDto) {
         var notebookOptional = notebookService.findNotebookById(notebookId);
         if (notebookOptional.isPresent()) {
-            var notebookEntity = new NotebookEntity();
-            BeanUtils.copyProperties(notebookOptional.get(), notebookEntity);
-            BeanUtils.copyProperties(notebookDto, notebookEntity);
-            studentService.setStudentsToNotebookByClass(notebookEntity.getClasse(), notebookEntity);
-            notebookService.saveNotebook(notebookEntity);
-            return ResponseEntity.ok().build();
+            var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            if (notebookOptional.get().getTeacher().getId().equals(authenticationId)) {
+                var notebookEntity = new NotebookEntity();
+                BeanUtils.copyProperties(notebookOptional.get(), notebookEntity);
+                BeanUtils.copyProperties(notebookDto, notebookEntity);
+                studentService.setStudentsToNotebookByClass(notebookEntity.getClasse(), notebookEntity);
+                notebookService.saveNotebook(notebookEntity);
+                return ResponseEntity.ok().build();
+            }
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Caderneta não encontrada!");
     }
@@ -94,8 +107,12 @@ public class NotebookController {
     public ResponseEntity<?> deleteNotebook(@PathVariable(value = "notebookId") UUID notebookId) {
         var notebookOptional = notebookService.findNotebookById(notebookId);
         if (notebookOptional.isPresent()) {
-            notebookService.deleteNotebookById(notebookId);
-            return ResponseEntity.ok().build();
+            var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            if (notebookOptional.get().getTeacher().getId().equals(authenticationId)) {
+                notebookService.deleteNotebookById(notebookId);
+                return ResponseEntity.ok().build();
+            }
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Caderneta não encontrada!");
     }
