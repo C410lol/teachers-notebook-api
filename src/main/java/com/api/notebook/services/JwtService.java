@@ -57,7 +57,7 @@ public class JwtService {
         var teacherOptional = teacherService.findTeacherByEmail(getEmailByToken(token));
         if (teacherOptional.isPresent()) { //Verify if the user exists
             return new UsernamePasswordAuthenticationToken( //If user exists returns an authentication
-                    teacherOptional.get().getEmail(),
+                    teacherOptional.get().getId(),
                     teacherOptional.get().getPassword(),
                     List.of(new SimpleGrantedAuthority(teacherOptional.get().getRole().name()))
             );
