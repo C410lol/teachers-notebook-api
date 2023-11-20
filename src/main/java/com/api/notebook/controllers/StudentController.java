@@ -10,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.BeanUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -23,6 +24,7 @@ public class StudentController {
     private final NotebookService notebookService;
 
     @PostMapping("/create") //POST endpoint to create a student entity
+    @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_USER')")
     public ResponseEntity<Object> createGrade(@RequestBody @Valid @NotNull StudentDto studentDto) {
         var studentEntity = new StudentEntity();
         BeanUtils.copyProperties(studentDto, studentEntity);
@@ -31,16 +33,25 @@ public class StudentController {
     }
 
     @GetMapping("/all") //GET endpoint to get all students
-    public ResponseEntity<Object> getAllStudents(
-            @RequestParam(value = "notebookId", required = false) UUID notebookId
-    ) {
-        if (notebookId != null) {
-            var optionalNotebook = notebookService.findNotebookById(notebookId);
-            if (optionalNotebook.isPresent()) {
-                return ResponseEntity.ok(optionalNotebook.get().getStudents());
-            } else return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<Object> getAllStudents() {
+        var students = studentService.findAllStudents();
+        if (students.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
-        return ResponseEntity.ok(studentService.findAllStudents());
+        return ResponseEntity.ok(students);
+    }
+
+    @GetMapping("/all/{notebookId}") //GET endpoint to get all students
+    @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_USER')")
+    public ResponseEntity<Object> getAllStudents(
+            @PathVariable(value = "notebookId") UUID notebookId
+    ) {
+        var optionalNotebook = notebookService.findNotebookById(notebookId);
+        if (optionalNotebook.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        return ResponseEntity.ok(optionalNotebook.get().getStudents());
     }
 
 }

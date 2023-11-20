@@ -14,6 +14,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,6 +31,7 @@ public class LessonController {
     private final NotebookService notebookService;
 
     @PostMapping("/create") //POST endpoint to create a lesson entity
+    @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_USER')")
     public ResponseEntity<Object> createLesson(@RequestParam(value = "notebookId") UUID notebookId,
                                                @RequestBody @Valid @NotNull LessonDto lessonDto) {
         var lessonEntity = new LessonEntity();
@@ -43,8 +45,19 @@ public class LessonController {
     }
 
     @GetMapping("/all") //GET endpoint to get all lessons
-    public ResponseEntity<Object> getAllLessons(
-            @RequestParam(value = "notebookId", required = false) UUID notebookId,
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<Object> getAllLessons() {
+        var lessons = lessonService.findAllLessons();
+        if (lessons.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        return ResponseEntity.ok(lessons);
+    }
+
+    @GetMapping("/all/{notebookId}") //GET endpoint to get all lessons
+    @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_USER')")
+    public ResponseEntity<Object> getAllLessonsByNotebookId(
+            @PathVariable(value = "notebookId") UUID notebookId,
             @RequestParam(value = "pageNum", defaultValue = "0", required = false) String pageNum,
             @RequestParam(value = "direction", defaultValue = "desc", required = false) String direction,
             @RequestParam(value = "sortBy", defaultValue = "status", required = false) String sortBy
@@ -55,14 +68,15 @@ public class LessonController {
                 Sort.Direction.fromString(direction),
                 sortBy
         );
-        if (notebookId != null) { //Verify if the param exists
-            //If so, it returns a list of lessons based on this notebook id
-            return ResponseEntity.ok(lessonService.findAllLessonsByNotebookId(notebookId, pageable));
+        var notebookLessons = lessonService.findAllLessonsByNotebookId(notebookId, pageable);
+        if (notebookLessons.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
-        return ResponseEntity.ok(lessonService.findAllLessons());
+        return ResponseEntity.ok(notebookLessons);
     }
 
     @GetMapping("/{lessonId}")
+    @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_USER')")
     public ResponseEntity<Object> getLessonById(@PathVariable(value = "lessonId") UUID lessonId) {
         var lessonOptional = lessonService.findLessonById(lessonId);
         if (lessonOptional.isPresent()) {
@@ -76,6 +90,7 @@ public class LessonController {
     }
 
     @PutMapping("/edit/{lessonId}")
+    @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_USER')")
     public ResponseEntity<Object> editLesson(@PathVariable(value = "lessonId") UUID lessonId,
                                                @RequestBody @Valid LessonDto lessonDto) {
         var lessonOptional = lessonService.findLessonById(lessonId);
@@ -94,6 +109,7 @@ public class LessonController {
     }
 
     @DeleteMapping("/delete/{lessonId}")
+    @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_USER')")
     public ResponseEntity<Object> deleteLesson(@PathVariable(value = "lessonId") UUID lessonId) {
         var lessonOptional = lessonService.findLessonById(lessonId);
         if (lessonOptional.isPresent()) {

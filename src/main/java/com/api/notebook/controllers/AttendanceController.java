@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,8 +26,11 @@ public class AttendanceController {
     private final LessonService lessonService;
 
     @PostMapping("/create") //POST endpoint to create an attendance entity
-    public ResponseEntity<Object> createAttendance(@RequestParam(value = "lessonId") UUID lessonId,
-                                                   @RequestBody @Valid @NotNull List<AttendanceDto> attendanceDtos) {
+    @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_USER')")
+    public ResponseEntity<Object> createAttendance(
+            @RequestParam(value = "lessonId") UUID lessonId,
+            @RequestBody @Valid @NotNull List<AttendanceDto> attendanceDtos
+    ) {
         int currentIndex = 0;
         for(AttendanceDto attendanceDto:
                 attendanceDtos) {
@@ -41,13 +45,25 @@ public class AttendanceController {
     }
 
     @GetMapping("/all") //GET endpoint to get all attendances
-    public ResponseEntity<Object> getAllAttendances(
-            @RequestParam(value = "lessonId", required = false) UUID lessonId
-    ) {
-        if(lessonId != null) {
-            return ResponseEntity.ok(attendanceService.findAllAttendancesByLessonId(lessonId));
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<Object> getAllAttendances() {
+        var attendances = attendanceService.findAllAttendances();
+        if (attendances.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
-        return ResponseEntity.ok(attendanceService.findAllAttendances());
+        return ResponseEntity.ok(attendances);
+    }
+
+    @GetMapping("/all/{lessonId}") //GET endpoint to get all attendances
+    @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_USER')")
+    public ResponseEntity<Object> getAllAttendancesByLessonId(
+            @PathVariable(value = "lessonId") UUID lessonId
+    ) {
+        var lessonAttendances = attendanceService.findAllAttendancesByLessonId(lessonId);
+        if (lessonAttendances.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        return ResponseEntity.ok(lessonAttendances);
     }
 
 }

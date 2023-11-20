@@ -14,6 +14,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,6 +29,7 @@ public class WorkController {
     private final NotebookService notebookService;
 
     @PostMapping("/create") //POST endpoint to create a work entity
+    @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_USER')")
     public ResponseEntity<Object> createWork(@RequestParam(value = "notebookId") UUID notebookId,
                                                @RequestBody @Valid @NotNull WorkDto workDto) {
         var workEntity = new WorkEntity();
@@ -38,8 +40,19 @@ public class WorkController {
     }
 
     @GetMapping("/all") //GET endpoint to get all works
-    public ResponseEntity<Object> getAllWorks(
-            @RequestParam(value = "notebookId", required = false) UUID notebookId,
+    @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_USER')")
+    public ResponseEntity<Object> getAllWorks() {
+        var works = workService.findAllWorks();
+        if (works.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        return ResponseEntity.ok(works);
+    }
+
+    @GetMapping("/all/{notebookId}") //GET endpoint to get all works
+    @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_USER')")
+    public ResponseEntity<Object> getAllWorksByNotebookId(
+            @PathVariable(value = "notebookId") UUID notebookId,
             @RequestParam(value = "pageNum", defaultValue = "0", required = false) String pageNum,
             @RequestParam(value = "direction", defaultValue = "desc", required = false) String direction,
             @RequestParam(value = "sortBy", defaultValue = "status", required = false) String sortBy
@@ -50,14 +63,15 @@ public class WorkController {
                 Sort.Direction.fromString(direction),
                 sortBy
         );
-        if (notebookId != null) { //Check if the param exists
-            //If exists, it returns a list based on this 'notebookId' param
-            return ResponseEntity.ok(workService.findAllWorksByNotebookId(notebookId, pageable));
+        var notebookWorks = workService.findAllWorksByNotebookId(notebookId, pageable);
+        if (notebookWorks.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
-        return ResponseEntity.ok(workService.findAllWorks());
+        return ResponseEntity.ok(notebookWorks);
     }
 
     @GetMapping("/{workId}")
+    @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_USER')")
     public ResponseEntity<Object> getWorkById(@PathVariable(value = "workId") UUID workId) {
         var workOptional = workService.findWorkById(workId);
         if (workOptional.isPresent()) {
@@ -71,6 +85,7 @@ public class WorkController {
     }
 
     @PutMapping("/edit/{workId}")
+    @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_USER')")
     public ResponseEntity<Object> editWork(@PathVariable(value = "workId") UUID workId,
                                              @RequestBody @Valid WorkDto workDto) {
         var workOptional = workService.findWorkById(workId);
@@ -89,6 +104,7 @@ public class WorkController {
     }
 
     @DeleteMapping("/delete/{workId}")
+    @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_USER')")
     public ResponseEntity<Object> deleteWork(@PathVariable(value = "workId") UUID workId) {
         var workOptional = workService.findWorkById(workId);
         if (workOptional.isPresent()) {

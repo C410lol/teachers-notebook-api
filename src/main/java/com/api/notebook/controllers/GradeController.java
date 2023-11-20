@@ -13,6 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.BeanUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -27,6 +28,7 @@ public class GradeController {
     private final StudentService studentService;
 
     @PostMapping("/create") //POST endpoint to create a grade entity
+    @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_USER')")
     public ResponseEntity<Object> createGrade(@RequestParam(value = "workId") UUID workId,
                                                    @RequestBody @Valid @NotNull GradeDto gradeDto) {
         var gradeEntity = new GradeEntity();
@@ -38,13 +40,25 @@ public class GradeController {
     }
 
     @GetMapping("/all") //GET endpoint to get all grades
-    public ResponseEntity<Object> getAllGrades(
-            @RequestParam(value = "workId", required = false) UUID workId
-    ) {
-        if (workId != null) {
-            return ResponseEntity.ok(gradeService.findAllGradesByWorkId(workId));
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<Object> getAllGrades() {
+        var grades = gradeService.findAllGrades();
+        if (grades.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
-        return ResponseEntity.ok(gradeService.findAllGrades());
+        return ResponseEntity.ok(grades);
+    }
+
+    @GetMapping("/all/{workId}") //GET endpoint to get all grades
+    @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_USER')")
+    public ResponseEntity<Object> getAllGradesByWorkId(
+            @PathVariable(value = "workId") UUID workId
+    ) {
+        var workGrades = gradeService.findAllGradesByWorkId(workId);
+        if (workGrades.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        return ResponseEntity.ok(workGrades);
     }
 
 }

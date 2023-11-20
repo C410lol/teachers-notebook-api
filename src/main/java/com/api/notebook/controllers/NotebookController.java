@@ -12,12 +12,14 @@ import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.BeanUtils;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,6 +37,7 @@ public class NotebookController {
     private final StudentService studentService;
 
     @PostMapping("/create") //POST endpoint to create a notebook entity
+    @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_USER')")
     public ResponseEntity<Object> createNotebook(@RequestParam(value = "teacherId") UUID teacherId,
                                               @RequestBody @Valid @NotNull NotebookDto notebookDto) {
         var notebookEntity = new NotebookEntity();
@@ -48,8 +51,19 @@ public class NotebookController {
     }
 
     @GetMapping("/all") //GET endpoint to get all notebooks
-    public ResponseEntity<Object> getAllNotebooks(
-            @RequestParam(value = "teacherId", required = false) UUID teacherId,
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<Object> getAllNotebooks() {
+        var notebooks = notebookService.findAllNotebooks();
+        if (notebooks.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        return ResponseEntity.ok(notebooks);
+    }
+
+    @GetMapping("/all/{teacherId}") //GET endpoint to get all notebooks
+    @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_USER')")
+    public ResponseEntity<Object> getAllNotebooksByTeacherId(
+            @PathVariable(value = "teacherId") UUID teacherId,
             @RequestParam(value = "pageNum", defaultValue = "0", required = false) String pageNum,
             @RequestParam(value = "direction", defaultValue = "desc", required = false) String direction,
             @RequestParam(value = "sortBy", defaultValue = "status", required = false) String sortBy
@@ -60,18 +74,19 @@ public class NotebookController {
                 Sort.Direction.fromString(direction),
                 sortBy
         );
-        if (teacherId != null) { //Verify if param exists
-            var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            if (authenticationId.equals(teacherId)) {
-
-                //If exists, it returns a list based on this 'teacherId' param
-                return ResponseEntity.ok(notebookService.findAllNotebooksByTeacherId(teacherId, pageable));
-            }
+        var teacherNotebooks = notebookService.findAllNotebooksByTeacherId(teacherId, pageable);
+        if (teacherNotebooks.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
-        return ResponseEntity.ok(notebookService.findAllNotebooks());
+        var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (!authenticationId.equals(teacherId)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(teacherNotebooks);
     }
 
     @GetMapping("/{notebookId}")
+    @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_USER')")
     public ResponseEntity<Object> getNotebookById(@PathVariable(value = "notebookId") UUID notebookId) {
         var notebook = notebookService.findNotebookById(notebookId);
         if (notebook.isPresent()) {
@@ -85,6 +100,7 @@ public class NotebookController {
     }
 
     @PutMapping("/edit/{notebookId}")
+    @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_USER')")
     public ResponseEntity<?> editNotebook(@PathVariable(value = "notebookId") UUID notebookId,
                                                @RequestBody @Valid NotebookDto notebookDto) {
         var notebookOptional = notebookService.findNotebookById(notebookId);
@@ -104,6 +120,7 @@ public class NotebookController {
     }
 
     @DeleteMapping("/delete/{notebookId}")
+    @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_USER')")
     public ResponseEntity<?> deleteNotebook(@PathVariable(value = "notebookId") UUID notebookId) {
         var notebookOptional = notebookService.findNotebookById(notebookId);
         if (notebookOptional.isPresent()) {
@@ -118,6 +135,7 @@ public class NotebookController {
     }
 
     @PutMapping("/finalize/{notebookId}")
+    @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_USER')")
     public ResponseEntity<Object> finalizeNotebook(
             @PathVariable(value = "notebookId") UUID notebookId,
             @RequestBody @Valid WorkTypeWeights workTypeWeights) {
