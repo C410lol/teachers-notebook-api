@@ -1,18 +1,17 @@
 package com.api.notebook.services;
 
 import com.api.notebook.enums.StatusEnum;
-import com.api.notebook.models.FinalAverageModel;
-import com.api.notebook.models.dtos.WorkTypeWeights;
+import com.api.notebook.models.MissingTaskLessonModel;
+import com.api.notebook.models.MissingTaskWorkModel;
+import com.api.notebook.models.MissingTasksModel;
+import com.api.notebook.models.WorkTypeWeightsModel;
 import com.api.notebook.models.entities.*;
 import com.api.notebook.repositories.NotebookRepository;
-import com.api.notebook.utils.CalculationsUtils;
 import com.api.notebook.utils.ExcelUtils;
 import com.api.notebook.utils.NotebookUtils;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -57,23 +56,58 @@ public class NotebookService {
         notebookOptional.ifPresent(work::setNotebook);
     }
 
-    //Finish notebook and return all students average
-    public ByteArrayResource finalizeNotebook(UUID notebookId, WorkTypeWeights workTypeWeights) {
-        var notebook = findNotebookById(notebookId);
-        if(notebook.isPresent()) {
-            var allFinalAverageStudents = NotebookUtils.getAllFinalAverageStudents(notebook.get(), workTypeWeights);
-            var byteArrayOutput = ExcelUtils.createFinalAverageExcelTable(allFinalAverageStudents);
-            var byteArrayResource = new ByteArrayResource(byteArrayOutput.toByteArray());
+    public MissingTasksModel verifyAllMissingTasks(UUID teacherId) {
+        var notebooks = notebookRepository.findByTeacherId(teacherId);
+        List<MissingTaskLessonModel> allMissingLessons = new ArrayList<>();
+        List<MissingTaskWorkModel> allMissingWorks = new ArrayList<>();
 
-            notebook.get().setStatus(StatusEnum.OFF);
-            notebook.get().setEndDate(LocalDate.now(ZoneId.of("UTC-3")));
-            saveNotebook(notebook.get());
-
-            return byteArrayResource;
+        for (NotebookEntity notebook:
+                notebooks) {
+            var missingTasks = verifyMissingTasksByNotebook(notebook);
+            allMissingLessons.addAll(missingTasks.getMissingLessons());
+            allMissingWorks.addAll(missingTasks.getMissingWorks());
         }
-        return null;
+
+        return new MissingTasksModel(allMissingLessons, allMissingWorks);
     }
 
+    public MissingTasksModel verifyMissingTasksByNotebook(@NotNull NotebookEntity notebook) {
+        List<MissingTaskLessonModel> missingLessons = new ArrayList<>();
+        List<MissingTaskWorkModel> missingWorks = new ArrayList<>();
+        for (LessonEntity lesson:
+                notebook.getLessons()) {
+            if (lesson.getAttendances().isEmpty()) {
+                missingLessons.add(new MissingTaskLessonModel(
+                        lesson.getId(),
+                        lesson.getTitle(),
+                        notebook.getId()
+                ));
+            }
+        }
+        for (WorkEntity work:
+                notebook.getWorks()) {
+            if (work.getGrades().size() != notebook.getStudents().size()) {
+                missingWorks.add(new MissingTaskWorkModel(
+                        work.getId(),
+                        work.getTitle(),
+                        notebook.getId()
+                ));
+            }
+        }
+        return new MissingTasksModel(missingLessons, missingWorks);
+    }
 
+    //Finish notebook and return all students average
+    public ByteArrayResource finalizeNotebook(NotebookEntity notebook, WorkTypeWeightsModel workTypeWeightsModel) {
+        var allFinalAverageStudents = NotebookUtils.getAllFinalAverageStudents(notebook, workTypeWeightsModel);
+        var byteArrayOutput = ExcelUtils.createFinalAverageExcelTable(allFinalAverageStudents);
+        var byteArrayResource = new ByteArrayResource(byteArrayOutput.toByteArray());
+
+        notebook.setStatus(StatusEnum.OFF);
+        notebook.setEndDate(LocalDate.now(ZoneId.of("UTC-3")));
+        saveNotebook(notebook);
+
+        return byteArrayResource;
+    }
 
 }

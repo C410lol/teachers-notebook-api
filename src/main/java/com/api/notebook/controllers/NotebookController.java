@@ -1,18 +1,14 @@
 package com.api.notebook.controllers;
 
 import com.api.notebook.enums.StatusEnum;
+import com.api.notebook.models.WorkTypeWeightsModel;
 import com.api.notebook.models.dtos.NotebookDto;
-import com.api.notebook.models.dtos.WorkTypeWeights;
 import com.api.notebook.models.entities.NotebookEntity;
-import com.api.notebook.services.NotebookService;
-import com.api.notebook.services.StudentService;
-import com.api.notebook.services.TeacherService;
+import com.api.notebook.services.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.BeanUtils;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
@@ -37,7 +33,7 @@ public class NotebookController {
     private final StudentService studentService;
 
     @PostMapping("/create") //POST endpoint to create a notebook entity
-    @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_USER')")
+    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     public ResponseEntity<Object> createNotebook(@RequestParam(value = "teacherId") UUID teacherId,
                                               @RequestBody @Valid @NotNull NotebookDto notebookDto) {
         var notebookEntity = new NotebookEntity();
@@ -61,13 +57,17 @@ public class NotebookController {
     }
 
     @GetMapping("/all/{teacherId}") //GET endpoint to get all notebooks
-    @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_USER')")
+    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     public ResponseEntity<Object> getAllNotebooksByTeacherId(
             @PathVariable(value = "teacherId") UUID teacherId,
             @RequestParam(value = "pageNum", defaultValue = "0", required = false) String pageNum,
             @RequestParam(value = "direction", defaultValue = "desc", required = false) String direction,
             @RequestParam(value = "sortBy", defaultValue = "status", required = false) String sortBy
     ) {
+        var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (!authenticationId.equals(teacherId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
         var pageable = PageRequest.of(
                 Integer.parseInt(pageNum),
                 10,
@@ -76,17 +76,13 @@ public class NotebookController {
         );
         var teacherNotebooks = notebookService.findAllNotebooksByTeacherId(teacherId, pageable);
         if (teacherNotebooks.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
-        var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (!authenticationId.equals(teacherId)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
         }
         return ResponseEntity.ok(teacherNotebooks);
     }
 
     @GetMapping("/{notebookId}")
-    @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_USER')")
+    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     public ResponseEntity<Object> getNotebookById(@PathVariable(value = "notebookId") UUID notebookId) {
         var notebook = notebookService.findNotebookById(notebookId);
         if (notebook.isPresent()) {
@@ -94,13 +90,13 @@ public class NotebookController {
             if (notebook.get().getTeacher().getId().equals(authenticationId)) {
                 return ResponseEntity.ok(notebook.get());
             }
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Caderneta não encontrada!");
     }
 
     @PutMapping("/edit/{notebookId}")
-    @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_USER')")
+    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     public ResponseEntity<?> editNotebook(@PathVariable(value = "notebookId") UUID notebookId,
                                                @RequestBody @Valid NotebookDto notebookDto) {
         var notebookOptional = notebookService.findNotebookById(notebookId);
@@ -114,13 +110,13 @@ public class NotebookController {
                 notebookService.saveNotebook(notebookEntity);
                 return ResponseEntity.ok().build();
             }
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Caderneta não encontrada!");
     }
 
     @DeleteMapping("/delete/{notebookId}")
-    @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_USER')")
+    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     public ResponseEntity<?> deleteNotebook(@PathVariable(value = "notebookId") UUID notebookId) {
         var notebookOptional = notebookService.findNotebookById(notebookId);
         if (notebookOptional.isPresent()) {
@@ -129,17 +125,61 @@ public class NotebookController {
                 notebookService.deleteNotebookById(notebookId);
                 return ResponseEntity.ok().build();
             }
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Caderneta não encontrada!");
     }
 
+    @GetMapping("/{teacherId}/all-missing-tasks")
+    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
+    public ResponseEntity<Object> verifyAllMissingTasks(
+            @PathVariable(value = "teacherId") @NotNull UUID teacherId
+    ) {
+        var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (!teacherId.equals(authenticationId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        var allMissingTasks = notebookService.verifyAllMissingTasks(teacherId);
+        if (allMissingTasks.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        }
+        return ResponseEntity.ok(allMissingTasks);
+    }
+
+    @GetMapping("/{notebookId}/missing-tasks")
+    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
+    public ResponseEntity<Object> verifyMissingTasks(
+            @PathVariable(value = "notebookId") UUID notebookId
+    ) {
+        var notebookOptional = notebookService.findNotebookById(notebookId);
+        if (notebookOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (!notebookOptional.get().getTeacher().getId().equals(authenticationId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        var missingTasks = notebookService.verifyMissingTasksByNotebook(notebookOptional.get());
+        if (missingTasks.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        }
+        return ResponseEntity.ok(missingTasks);
+    }
+
     @PutMapping("/finalize/{notebookId}")
-    @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_USER')")
+    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     public ResponseEntity<Object> finalizeNotebook(
             @PathVariable(value = "notebookId") UUID notebookId,
-            @RequestBody @Valid WorkTypeWeights workTypeWeights) {
-        var file = notebookService.finalizeNotebook(notebookId, workTypeWeights);
+            @RequestBody @Valid WorkTypeWeightsModel workTypeWeightsModel) {
+        var notebookOptional = notebookService.findNotebookById(notebookId);
+        if (notebookOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (!notebookOptional.get().getTeacher().getId().equals(authenticationId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        var file = notebookService.finalizeNotebook(notebookOptional.get(), workTypeWeightsModel);
         if (file != null) {
 
             var headers = new HttpHeaders();
