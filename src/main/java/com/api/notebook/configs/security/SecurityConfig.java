@@ -5,6 +5,8 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -18,6 +20,7 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -32,7 +35,11 @@ public class SecurityConfig {
                         auth.requestMatchers(
                                 "/teachers/create",
                                         "/teachers/login",
-                                        "/teachers/get-by-token")
+                                        "/teachers/verify-account/{teacherId}",
+                                        "/teachers/resend-verification-email",
+                                        "/teachers/{teacherId}/verified",
+                                        "/teachers/request-password-change",
+                                        "/teachers/{teacherId}/change-password")
                                 .permitAll().anyRequest().authenticated())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class) //Adding JWT filter
                 .build();

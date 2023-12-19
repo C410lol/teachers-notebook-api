@@ -13,6 +13,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
@@ -56,10 +57,17 @@ public class JwtService {
     public Authentication tryToAuthenticate(String token) { //Try to authenticate user by token
         var teacherOptional = teacherService.findTeacherByEmail(getEmailByToken(token));
         if (teacherOptional.isPresent()) { //Verify if the user exists
-            return new UsernamePasswordAuthenticationToken( //If user exists returns an authentication
+            if (teacherOptional.get().getRole() != null) {
+                return new UsernamePasswordAuthenticationToken( //If user exists returns an authentication
+                        teacherOptional.get().getId(),
+                        teacherOptional.get().getPassword(),
+                        List.of(new SimpleGrantedAuthority(teacherOptional.get().getRole().name()))
+                );
+            }
+            return new UsernamePasswordAuthenticationToken(
                     teacherOptional.get().getId(),
                     teacherOptional.get().getPassword(),
-                    List.of(new SimpleGrantedAuthority(teacherOptional.get().getRole().name()))
+                    Collections.emptyList()
             );
         }
         return null;
