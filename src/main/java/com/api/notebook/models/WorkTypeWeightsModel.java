@@ -1,10 +1,10 @@
-package com.api.notebook.models.dtos;
+package com.api.notebook.models;
 
 import lombok.Data;
 import org.jetbrains.annotations.NotNull;
 
 @Data
-public class WorkTypeWeights {
+public class WorkTypeWeightsModel {
 
     @NotNull
     private Double tarefaWeight;

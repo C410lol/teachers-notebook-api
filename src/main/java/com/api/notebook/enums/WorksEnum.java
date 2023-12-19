@@ -5,6 +5,6 @@ public enum WorksEnum {
     TRABALHO,
     PROVA,
     PARTIÇIPAÇÃO,
-    SIMULADO
+    OUTROS
 
 }

@@ -1,7 +1,7 @@
 package com.api.notebook.utils;
 
 import com.api.notebook.models.FinalAverageModel;
-import com.api.notebook.models.dtos.WorkTypeWeights;
+import com.api.notebook.models.WorkTypeWeightsModel;
 import com.api.notebook.models.entities.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -13,7 +13,7 @@ public class NotebookUtils {
 
     public static @NotNull List<FinalAverageModel> getAllFinalAverageStudents(
             @NotNull NotebookEntity notebook,
-            WorkTypeWeights workTypeWeights
+            WorkTypeWeightsModel workTypeWeightsModel
     ) {
         List<FinalAverageModel> allFinalAverage = new ArrayList<>();
 
@@ -29,7 +29,7 @@ public class NotebookUtils {
                     setStudentFinalGrade(
                             notebook,
                             student,
-                            workTypeWeights
+                            workTypeWeightsModel
                     ),
                     getStudentAbsences(notebook, student),
                     0));
@@ -43,11 +43,11 @@ public class NotebookUtils {
     //Get all grades of the student by the given notebook's works
     private static @NotNull Double setStudentFinalGrade(@NotNull NotebookEntity notebook,
                                                  StudentEntity student,
-                                                 WorkTypeWeights workTypeWeights) {
-        List<Double> tarefaGrades = new ArrayList<>();
+                                                 WorkTypeWeightsModel workTypeWeightsModel) {
+        List<Double> trabalhosGrades = new ArrayList<>();
         List<Double> provasGrades = new ArrayList<>();
         List<Double> participacaoGrades = new ArrayList<>();
-        List<Double> simuladoGrades = new ArrayList<>();
+        List<Double> outrosGrades = new ArrayList<>();
         for (WorkEntity currentWork:
                 notebook.getWorks()) {
             for (GradeEntity currentGrade:
@@ -55,19 +55,19 @@ public class NotebookUtils {
                 if (currentGrade.getStudent().equals(student)) {
                     var grade = currentGrade.getGrade();
                     switch (currentWork.getType()) {
-                        case TRABALHO -> tarefaGrades.add(grade);
+                        case TRABALHO -> trabalhosGrades.add(grade);
                         case PROVA -> provasGrades.add(grade);
                         case PARTIÇIPAÇÃO -> participacaoGrades.add(grade);
-                        case SIMULADO -> simuladoGrades.add(grade);
+                        case OUTROS -> outrosGrades.add(grade);
                     }
                 }
             }
         }
         List<Double> allGrades = new ArrayList<>();
-        allGrades.add(getFinalGradeByWorkType(tarefaGrades, workTypeWeights.getTarefaWeight()));
-        allGrades.add(getFinalGradeByWorkType(provasGrades, workTypeWeights.getProvasWeight()));
-        allGrades.add(getFinalGradeByWorkType(participacaoGrades, workTypeWeights.getParticipacaoWeight()));
-        allGrades.add(getFinalGradeByWorkType(simuladoGrades, workTypeWeights.getSimuladoWeight()));
+        allGrades.add(getFinalGradeByWorkType(trabalhosGrades, workTypeWeightsModel.getTarefaWeight()));
+        allGrades.add(getFinalGradeByWorkType(provasGrades, workTypeWeightsModel.getProvasWeight()));
+        allGrades.add(getFinalGradeByWorkType(participacaoGrades, workTypeWeightsModel.getParticipacaoWeight()));
+        allGrades.add(getFinalGradeByWorkType(outrosGrades, workTypeWeightsModel.getSimuladoWeight()));
         return CalculationsUtils.sumEveryItemOfNumberList(allGrades);
     }
 

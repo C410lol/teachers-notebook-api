@@ -24,7 +24,7 @@ public class StudentController {
     private final NotebookService notebookService;
 
     @PostMapping("/create") //POST endpoint to create a student entity
-    @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_USER')")
+    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     public ResponseEntity<Object> createGrade(@RequestBody @Valid @NotNull StudentDto studentDto) {
         var studentEntity = new StudentEntity();
         BeanUtils.copyProperties(studentDto, studentEntity);
@@ -43,7 +43,7 @@ public class StudentController {
     }
 
     @GetMapping("/all/{notebookId}") //GET endpoint to get all students
-    @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_USER')")
+    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     public ResponseEntity<Object> getAllStudents(
             @PathVariable(value = "notebookId") UUID notebookId
     ) {

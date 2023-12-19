@@ -31,7 +31,7 @@ public class LessonController {
     private final NotebookService notebookService;
 
     @PostMapping("/create") //POST endpoint to create a lesson entity
-    @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_USER')")
+    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     public ResponseEntity<Object> createLesson(@RequestParam(value = "notebookId") UUID notebookId,
                                                @RequestBody @Valid @NotNull LessonDto lessonDto) {
         var lessonEntity = new LessonEntity();
@@ -55,7 +55,7 @@ public class LessonController {
     }
 
     @GetMapping("/all/{notebookId}") //GET endpoint to get all lessons
-    @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_USER')")
+    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     public ResponseEntity<Object> getAllLessonsByNotebookId(
             @PathVariable(value = "notebookId") UUID notebookId,
             @RequestParam(value = "pageNum", defaultValue = "0", required = false) String pageNum,
@@ -70,13 +70,13 @@ public class LessonController {
         );
         var notebookLessons = lessonService.findAllLessonsByNotebookId(notebookId, pageable);
         if (notebookLessons.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
         }
         return ResponseEntity.ok(notebookLessons);
     }
 
     @GetMapping("/{lessonId}")
-    @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_USER')")
+    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     public ResponseEntity<Object> getLessonById(@PathVariable(value = "lessonId") UUID lessonId) {
         var lessonOptional = lessonService.findLessonById(lessonId);
         if (lessonOptional.isPresent()) {
@@ -84,13 +84,13 @@ public class LessonController {
             if (lessonOptional.get().getNotebook().getTeacher().getId().equals(authenticationId)) {
                 return ResponseEntity.ok(lessonOptional.get());
             }
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Aula não encontrada!");
     }
 
     @PutMapping("/edit/{lessonId}")
-    @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_USER')")
+    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     public ResponseEntity<Object> editLesson(@PathVariable(value = "lessonId") UUID lessonId,
                                                @RequestBody @Valid LessonDto lessonDto) {
         var lessonOptional = lessonService.findLessonById(lessonId);
@@ -103,13 +103,13 @@ public class LessonController {
                 lessonService.saveLesson(lessonEntity);
                 return ResponseEntity.ok().build();
             }
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Aula não encontrada!");
     }
 
     @DeleteMapping("/delete/{lessonId}")
-    @PreAuthorize("hasRole('ROLE_ADMIN') || hasRole('ROLE_USER')")
+    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     public ResponseEntity<Object> deleteLesson(@PathVariable(value = "lessonId") UUID lessonId) {
         var lessonOptional = lessonService.findLessonById(lessonId);
         if (lessonOptional.isPresent()) {
@@ -118,7 +118,7 @@ public class LessonController {
                 lessonService.deleteLessonById(lessonId);
                 return ResponseEntity.ok().build();
             }
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Aula não encontrada!");
     }
