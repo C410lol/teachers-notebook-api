@@ -1,5 +1,6 @@
 package com.api.notebook.controllers;
 
+import com.api.notebook.enums.AuthTryEnum;
 import com.api.notebook.enums.RoleEnum;
 import com.api.notebook.enums.VerificationCodeEnum;
 import com.api.notebook.models.AuthModel;
@@ -38,9 +39,14 @@ public class TeacherController {
     private final Random random;
 
     @PostMapping("/create") //POST endpoint to create a teacher entity
-    public ResponseEntity<Object> createTeacher(@RequestBody @Valid TeacherDto teacherDto) {
+    public ResponseEntity<Object> createTeacher(@RequestBody @Valid @NotNull TeacherDto teacherDto) {
+        if (teacherService.existsByEmail(teacherDto.getEmail())) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Email já registrado!");
+        }
+
         var teacherEntity = new TeacherEntity();
         BeanUtils.copyProperties(teacherDto, teacherEntity);
+        teacherEntity.setVerified(false);
         var createdTeacher = teacherService.createTeacher(teacherEntity);
 
         var code = random.nextInt(1000, 9999);
@@ -58,7 +64,7 @@ public class TeacherController {
                         teacherEntity.getId(), code)
         ));
 
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        return ResponseEntity.status(HttpStatus.CREATED).body("Usuário criado!");
     }
 
     @GetMapping("/all") //GET endpoint to get all teachers
@@ -75,7 +81,8 @@ public class TeacherController {
             if (authenticationId.equals(teacherId)) {
                 return ResponseEntity.ok(teacherOptional.get());
             }
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("Não é possível visualizar a conta de outros usuários!");
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuário não encontrado!");
     }
@@ -91,9 +98,10 @@ public class TeacherController {
                 BeanUtils.copyProperties(teacherOptional.get(), teacherEntity);
                 BeanUtils.copyProperties(teacherWithoutPasswordDto, teacherEntity);
                 teacherService.editTeacher(teacherEntity);
-                return ResponseEntity.ok().build();
+                return ResponseEntity.ok().body("Usuário editado!");
             }
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("Não é possível alterar a conta de outros usuários!");
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuário não encontrado!");
     }
@@ -114,7 +122,13 @@ public class TeacherController {
         }
 
         if (teacherOptional.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuário não encontrado!");
+        }
+
+        if (verificationCodeService.existsByTeacherIdAndType(
+                teacherOptional.get().getId(), VerificationCodeEnum.PASSWORD_CHANGE)) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body("Requisição para a troca de senha já registrada nessa conta!");
         }
 
         var code = random.nextInt(1000, 9999);
@@ -132,7 +146,7 @@ public class TeacherController {
                         teacherOptional.get().getId(), code)
         ));
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok("Requisição para trocar de senha enviada!");
     }
 
     @PutMapping("/{teacherId}/change-password")
@@ -143,16 +157,17 @@ public class TeacherController {
     ) {
         var teacherOptional = teacherService.findTeacherById(teacherId);
         if (teacherOptional.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuário não encontrado!");
         }
 
         var vCodeOptional = verificationCodeService.findByTeacherId(teacherId, VerificationCodeEnum.PASSWORD_CHANGE);
         if (vCodeOptional.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Código de verificação não registrado para essa conta!");
         }
 
         if (!vCodeOptional.get().getCode().equals(vCode)) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Código de verificação errado!");
         }
 
         teacherOptional.get().setPassword(newPassword);
@@ -161,7 +176,7 @@ public class TeacherController {
 
         verificationCodeService.deleteById(vCodeOptional.get().getId());
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok("Senha alterada!");
     }
 
     @DeleteMapping("/{teacherId}")
@@ -171,9 +186,10 @@ public class TeacherController {
             var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             if (authenticationId.equals(teacherId)) {
                 teacherService.deleteTeacherById(teacherId);
-                return ResponseEntity.ok().build();
+                return ResponseEntity.ok("Usuário deletado!");
             }
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("Não é possivel excluir conta de outros usuários!");
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuário não encontrado!");
     }
@@ -185,25 +201,27 @@ public class TeacherController {
     ) {
         var teacherOptional = teacherService.findTeacherById(teacherId);
         if (teacherOptional.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Conta não encontrada!");
         }
 
         var verificationCodeOptional = verificationCodeService.findByTeacherId(
                 teacherId, VerificationCodeEnum.EMAIL_VERIFICATION);
         if (verificationCodeOptional.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Código de verificação não registrado para essa conta!");
         }
 
         if (!verificationCodeOptional.get().getCode().equals(vCode)) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Código de verificação errado!");
         }
 
         teacherOptional.get().setRole(RoleEnum.ROLE_USER);
+        teacherOptional.get().setVerified(true);
         teacherService.editTeacher(teacherOptional.get());
 
         verificationCodeService.deleteById(verificationCodeOptional.get().getId());
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok("Conta verificada!");
     }
 
     @PostMapping("/resend-verification-email")
@@ -222,13 +240,14 @@ public class TeacherController {
         }
 
         if (teacherOptional.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Conta não encontrada!");
         }
 
         var verificationCodeOptional = verificationCodeService.findByTeacherId(
                 teacherOptional.get().getId(), VerificationCodeEnum.EMAIL_VERIFICATION);
         if (verificationCodeOptional.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Código de verificação não registrado para essa conta!");
         }
 
         mailProducer.sendMailMessage(new EmailModel(
@@ -239,7 +258,7 @@ public class TeacherController {
                         teacherId, verificationCodeOptional.get().getCode())
         ));
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok("Email de verificação reenviado!");
     }
 
     @GetMapping("/{teacherId}/verified")
@@ -250,7 +269,7 @@ public class TeacherController {
         if (teacherOptional.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(false);
         }
-        if (teacherOptional.get().getRole() == null) {
+        if (!teacherOptional.get().isVerified()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(false);
         }
         return ResponseEntity.ok(true);
@@ -258,11 +277,22 @@ public class TeacherController {
 
     @PostMapping("/login") //POST endpoint to authenticate a user
     public ResponseEntity<Object> authenticateUser(@RequestBody @Valid AuthModel authModel) {
-        var authentication = teacherService.tryToAuthenticateTeacher(authModel, jwtService); //Try to authenticate user
-        if (authentication != null) {
-            return ResponseEntity.ok(authentication); //If success it returns a token
+        var authentication = teacherService.tryToAuthenticateTeacher(authModel, jwtService);
+
+        switch (authentication.getStatus()) {
+            case OK -> {
+                return ResponseEntity.ok(authentication.getAuthReturnModel());
+            }
+            case NOT_FOUND -> {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Email não encontrado!");
+            }
+            case INCORRECT_PASSWORD -> {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Senha incorreta!");
+            }
+            default -> {
+                return ResponseEntity.badRequest().build();
+            }
         }
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Email ou senha incorretos!");
     }
 
 }

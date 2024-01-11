@@ -12,5 +12,6 @@ import java.util.UUID;
 public interface VerificationCodeRepository extends JpaRepository<VerificationCodeEntity, Long> {
 
     Optional<VerificationCodeEntity> findByTeacherIdAndType(UUID teacherId, VerificationCodeEnum type);
+    boolean existsByTeacherIdAndType(UUID teacherId, VerificationCodeEnum type);
 
 }

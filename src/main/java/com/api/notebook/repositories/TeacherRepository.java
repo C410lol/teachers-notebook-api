@@ -11,5 +11,6 @@ import java.util.UUID;
 public interface TeacherRepository extends JpaRepository<TeacherEntity, UUID> {
 
     Optional<TeacherEntity> findByEmail(String email);
+    boolean existsByEmail(String email);
 
 }

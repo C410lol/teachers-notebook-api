@@ -24,6 +24,10 @@ public class VerificationCodeService {
         return verificationCodeRepository.findByTeacherIdAndType(teacherId, type);
     }
 
+    public boolean existsByTeacherIdAndType(UUID teacherId, VerificationCodeEnum type) {
+        return verificationCodeRepository.existsByTeacherIdAndType(teacherId, type);
+    }
+
     public void deleteById(Long id) {
         verificationCodeRepository.deleteById(id);
     }

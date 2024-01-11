@@ -35,6 +35,9 @@ public class TeacherEntity {
     @Enumerated(value = EnumType.STRING)
     private RoleEnum role;
 
+    @Column(name = "verified")
+    private Boolean verified;
+
     @JsonIgnore
     @OneToMany(mappedBy = "teacher", cascade = {CascadeType.ALL})
     private List<VerificationCodeEntity> codes;
@@ -42,6 +45,8 @@ public class TeacherEntity {
     @JsonIgnore
     @OneToMany(mappedBy = "teacher", cascade = {CascadeType.ALL})
     private List<NotebookEntity> notebooks;
+
+    public boolean isVerified() { return verified; }
 
     @JsonGetter(value = "notebooks")
     public Integer getNotebooksQuantity() {
