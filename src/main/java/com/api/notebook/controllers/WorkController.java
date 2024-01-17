@@ -16,6 +16,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.UUID;
 
 @RestController
@@ -32,6 +34,9 @@ public class WorkController {
                                                @RequestBody @Valid @NotNull WorkDto workDto) {
         var workEntity = new WorkEntity();
         BeanUtils.copyProperties(workDto, workEntity);
+        if (workEntity.getDeliveryDate() == null) {
+            workEntity.setDeliveryDate(LocalDate.now(ZoneId.of("UTC-3")));
+        }
         notebookService.setWorkToNotebook(notebookId, workEntity);
         workService.saveWork(workEntity);
         return ResponseEntity.status(HttpStatus.CREATED).build();

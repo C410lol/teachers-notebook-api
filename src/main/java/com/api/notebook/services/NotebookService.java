@@ -4,10 +4,8 @@ import com.api.notebook.enums.StatusEnum;
 import com.api.notebook.models.MissingTaskLessonModel;
 import com.api.notebook.models.MissingTaskWorkModel;
 import com.api.notebook.models.MissingTasksModel;
-import com.api.notebook.models.WorkTypeWeightsModel;
 import com.api.notebook.models.entities.*;
 import com.api.notebook.repositories.NotebookRepository;
-import com.api.notebook.utils.ExcelUtils;
 import com.api.notebook.utils.NotebookUtils;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
@@ -16,6 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
@@ -98,10 +97,9 @@ public class NotebookService {
     }
 
     //Finish notebook and return all students average
-    public ByteArrayResource finalizeNotebook(NotebookEntity notebook, WorkTypeWeightsModel workTypeWeightsModel) {
-        var allFinalAverageStudents = NotebookUtils.getAllFinalAverageStudents(notebook, workTypeWeightsModel);
-        var byteArrayOutput = ExcelUtils.createFinalAverageExcelTable(allFinalAverageStudents);
-        var byteArrayResource = new ByteArrayResource(byteArrayOutput.toByteArray());
+    public ByteArrayResource finalizeNotebook(NotebookEntity notebook, Map<String, Integer> workTypeWeights) throws IOException {
+        var finalizedNotebook = NotebookUtils.finalizeNotebook(notebook, workTypeWeights);
+        var byteArrayResource = new ByteArrayResource(finalizedNotebook.toByteArray());
 
         notebook.setStatus(StatusEnum.OFF);
         notebook.setEndDate(LocalDate.now(ZoneId.of("UTC-3")));

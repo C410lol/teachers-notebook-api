@@ -1,7 +1,6 @@
 package com.api.notebook.controllers;
 
 import com.api.notebook.enums.StatusEnum;
-import com.api.notebook.models.WorkTypeWeightsModel;
 import com.api.notebook.models.dtos.NotebookDto;
 import com.api.notebook.models.entities.NotebookEntity;
 import com.api.notebook.services.*;
@@ -19,8 +18,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -170,7 +171,7 @@ public class NotebookController {
     @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     public ResponseEntity<Object> finalizeNotebook(
             @PathVariable(value = "notebookId") UUID notebookId,
-            @RequestBody @Valid WorkTypeWeightsModel workTypeWeightsModel) {
+            @RequestBody Map<String, Integer> workTypeWeights) throws IOException {
         var notebookOptional = notebookService.findNotebookById(notebookId);
         if (notebookOptional.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
@@ -179,7 +180,7 @@ public class NotebookController {
         if (!notebookOptional.get().getTeacher().getId().equals(authenticationId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        var file = notebookService.finalizeNotebook(notebookOptional.get(), workTypeWeightsModel);
+        var file = notebookService.finalizeNotebook(notebookOptional.get(), workTypeWeights);
         if (file != null) {
 
             var headers = new HttpHeaders();

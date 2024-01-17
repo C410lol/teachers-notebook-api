@@ -21,7 +21,6 @@ public class WorkDto {
     @NotNull
     private WorksEnum type;
 
-    @NotNull
     private LocalDate deliveryDate;
 
 }
