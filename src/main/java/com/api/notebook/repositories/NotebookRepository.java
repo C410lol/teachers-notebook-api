@@ -12,7 +12,7 @@ import java.util.UUID;
 @Repository
 public interface NotebookRepository extends JpaRepository<NotebookEntity, UUID> {
 
-    Page<NotebookEntity> findByTeacherId(UUID teacherId, Pageable pageable);
-    List<NotebookEntity> findByTeacherId(UUID teacherId);
+    Page<NotebookEntity> findByUserId(UUID userId, Pageable pageable);
+    List<NotebookEntity> findByUserId(UUID userId);
 
 }

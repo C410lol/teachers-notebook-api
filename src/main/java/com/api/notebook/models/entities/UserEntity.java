@@ -4,18 +4,15 @@ import com.api.notebook.enums.RoleEnum;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.List;
 import java.util.UUID;
 
 @Entity
 @Data
-@Table(name = "teachers")
-public class TeacherEntity {
+@Table(name = "users")
+public class UserEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -39,11 +36,11 @@ public class TeacherEntity {
     private Boolean verified;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "teacher", cascade = {CascadeType.ALL})
-    private List<VerificationCodeEntity> codes;
+    @OneToMany(mappedBy = "user", cascade = {CascadeType.ALL})
+    private List<VCodeEntity> codes;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "teacher", cascade = {CascadeType.ALL})
+    @OneToMany(mappedBy = "user", cascade = {CascadeType.ALL})
     private List<NotebookEntity> notebooks;
 
     public boolean isVerified() { return verified; }

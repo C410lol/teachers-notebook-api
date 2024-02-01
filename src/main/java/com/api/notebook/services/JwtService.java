@@ -21,7 +21,7 @@ import java.util.function.Function;
 @RequiredArgsConstructor
 public class JwtService {
 
-    private final TeacherService teacherService;
+    private final UserService userService;
 
     @Value("${jwt.secret.key}")
     private String secretKey;
@@ -55,7 +55,7 @@ public class JwtService {
     }
 
     public Authentication tryToAuthenticate(String token) { //Try to authenticate user by token
-        var teacherOptional = teacherService.findTeacherByEmail(getEmailByToken(token));
+        var teacherOptional = userService.findUserByEmail(getEmailByToken(token));
         if (teacherOptional.isPresent()) { //Verify if the user exists
             if (teacherOptional.get().isVerified()) {
                 return new UsernamePasswordAuthenticationToken( //If user exists returns an authentication

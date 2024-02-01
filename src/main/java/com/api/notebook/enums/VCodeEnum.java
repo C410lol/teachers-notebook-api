@@ -1,6 +1,6 @@
 package com.api.notebook.enums;
 
-public enum VerificationCodeEnum {
+public enum VCodeEnum {
 
     EMAIL_VERIFICATION,
     PASSWORD_CHANGE,

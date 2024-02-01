@@ -1,6 +1,6 @@
 package com.api.notebook.models.entities;
 
-import com.api.notebook.enums.VerificationCodeEnum;
+import com.api.notebook.enums.VCodeEnum;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -8,7 +8,7 @@ import lombok.Data;
 @Entity
 @Data
 @Table(name = "verification_codes")
-public class VerificationCodeEntity {
+public class VCodeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,11 +20,11 @@ public class VerificationCodeEntity {
 
     @Column(name = "type")
     @Enumerated(EnumType.STRING)
-    private VerificationCodeEnum type;
+    private VCodeEnum type;
 
     @ManyToOne
     @JsonIgnore
-    @JoinColumn(name = "teacher_id")
-    private TeacherEntity teacher;
+    @JoinColumn(name = "user_id")
+    private UserEntity user;
 
 }
