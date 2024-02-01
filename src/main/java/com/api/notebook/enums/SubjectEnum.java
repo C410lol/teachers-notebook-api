@@ -11,9 +11,11 @@ public enum SubjectEnum {
     Física,
     Química,
     Biologia,
+    Ciências,
     Inglês,
     Arte,
     Educação_Física,
-    Projeto_De_Vida
+    Projeto_De_Vida,
+    Informática
 
 }
