@@ -21,6 +21,9 @@ public class StudentEntity {
     @Column(name = "name")
     private String name;
 
+    @Column(name = "number")
+    private Integer number;
+
     @Column(name = "classe")
     @Enumerated(value = EnumType.STRING)
     private ClassEnum classe;
