@@ -1,9 +1,15 @@
 package com.api.notebook.controllers;
 
 import com.api.notebook.enums.StatusEnum;
+import com.api.notebook.enums.VCodeEnum;
+import com.api.notebook.models.EmailModel;
 import com.api.notebook.models.dtos.NotebookDto;
 import com.api.notebook.models.entities.NotebookEntity;
+import com.api.notebook.models.entities.VCodeEntity;
+import com.api.notebook.producers.MailProducer;
 import com.api.notebook.services.*;
+import com.api.notebook.utils.CodeGenerator;
+import com.api.notebook.utils.Constants;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
@@ -30,25 +36,38 @@ import java.util.UUID;
 public class NotebookController {
 
     private final NotebookService notebookService;
-    private final TeacherService teacherService;
+    private final UserService userService;
     private final StudentService studentService;
+    private final VCodeService vCodeService;
+    private final MailProducer mailProducer;
+
+
+
+    //CREATE
 
     @PostMapping("/create") //POST endpoint to create a notebook entity
-    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> createNotebook(@RequestParam(value = "teacherId") UUID teacherId,
                                               @RequestBody @Valid @NotNull NotebookDto notebookDto) {
         var notebookEntity = new NotebookEntity();
         BeanUtils.copyProperties(notebookDto, notebookEntity);
         notebookEntity.setStatus(StatusEnum.ON);
         notebookEntity.setCreateDate(LocalDate.now(ZoneId.of("UTC-3")));
-        teacherService.setNotebookToTeacher(teacherId, notebookEntity);
+        userService.setNotebookToUser(teacherId, notebookEntity);
         studentService.setStudentsToNotebookByClass(notebookEntity.getClasse(), notebookEntity);
         notebookService.saveNotebook(notebookEntity);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
+    //CREATE
+
+
+
+
+    //READ
+
     @GetMapping("/all") //GET endpoint to get all notebooks
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ROLE_ADM')")
     public ResponseEntity<Object> getAllNotebooks() {
         var notebooks = notebookService.findAllNotebooks();
         if (notebooks.isEmpty()) {
@@ -58,7 +77,7 @@ public class NotebookController {
     }
 
     @GetMapping("/all/{teacherId}") //GET endpoint to get all notebooks
-    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> getAllNotebooksByTeacherId(
             @PathVariable(value = "teacherId") UUID teacherId,
             @RequestParam(value = "pageNum", defaultValue = "0", required = false) String pageNum,
@@ -83,12 +102,12 @@ public class NotebookController {
     }
 
     @GetMapping("/{notebookId}")
-    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> getNotebookById(@PathVariable(value = "notebookId") UUID notebookId) {
         var notebook = notebookService.findNotebookById(notebookId);
         if (notebook.isPresent()) {
             var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            if (notebook.get().getTeacher().getId().equals(authenticationId)) {
+            if (notebook.get().getUser().getId().equals(authenticationId)) {
                 return ResponseEntity.ok(notebook.get());
             }
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
@@ -96,14 +115,21 @@ public class NotebookController {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Caderneta não encontrada!");
     }
 
+    //READ
+
+
+
+
+    //EDIT
+
     @PutMapping("/edit/{notebookId}")
-    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<?> editNotebook(@PathVariable(value = "notebookId") UUID notebookId,
                                                @RequestBody @Valid NotebookDto notebookDto) {
         var notebookOptional = notebookService.findNotebookById(notebookId);
         if (notebookOptional.isPresent()) {
             var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            if (notebookOptional.get().getTeacher().getId().equals(authenticationId)) {
+            if (notebookOptional.get().getUser().getId().equals(authenticationId)) {
                 var notebookEntity = new NotebookEntity();
                 BeanUtils.copyProperties(notebookOptional.get(), notebookEntity);
                 BeanUtils.copyProperties(notebookDto, notebookEntity);
@@ -116,23 +142,108 @@ public class NotebookController {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Caderneta não encontrada!");
     }
 
-    @DeleteMapping("/delete/{notebookId}")
-    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
-    public ResponseEntity<?> deleteNotebook(@PathVariable(value = "notebookId") UUID notebookId) {
-        var notebookOptional = notebookService.findNotebookById(notebookId);
-        if (notebookOptional.isPresent()) {
-            var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            if (notebookOptional.get().getTeacher().getId().equals(authenticationId)) {
-                notebookService.deleteNotebookById(notebookId);
-                return ResponseEntity.ok().build();
-            }
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    //EDIT
+
+
+
+
+    //DELETE
+
+    @PostMapping("/{notebookId}/delete-request")
+    public ResponseEntity<Object> deleteNotebookRequest(
+            @PathVariable(value = "notebookId") UUID notebookId,
+            @RequestParam(value = "userId") UUID userId
+    ) {
+
+        var userOptional = userService.findUserById(userId);
+        if (userOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuário não encontrado!");
         }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Caderneta não encontrada!");
+
+        var notebookOptional = notebookService.findNotebookById(notebookId);
+        if (notebookOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Caderneta não encontrada!");
+        }
+
+        if (vCodeService.existsByUserIdAndType(
+                userId, VCodeEnum.NOTEBOOK_DELETE)) {
+            var vCodeOptional = vCodeService.findByUserIdAndType(
+                    userId, VCodeEnum.NOTEBOOK_DELETE);
+            vCodeService.deleteById(vCodeOptional.get().getId());
+        }
+
+        var code = CodeGenerator.generateCode();
+        var vCodeEntity = new VCodeEntity();
+        vCodeEntity.setCode(code);
+        vCodeEntity.setType(VCodeEnum.NOTEBOOK_DELETE);
+        userService.setVCodeToUser(userId, vCodeEntity);
+        vCodeService.save(vCodeEntity);
+
+        mailProducer.sendMailMessage(new EmailModel(
+                userOptional.get().getEmail(),
+                "Requisição Para Deletar Caderneta",
+                String.format("Para confirmar a deleção da caderneta " +
+                        "da sala: {%s}, matéria: {%s} e bimestre: {%s}," +
+                                " clique neste link ou copie e cole em seu navegador:" +
+                                "%s/cadernetas?deleteNotebookId=%s&deleteNotebookVCode=%s",
+                        notebookOptional.get().getClasse(),
+                        notebookOptional.get().getSubject(),
+                        notebookOptional.get().getBimester(),
+                        Constants.APP_URL,
+                        notebookOptional.get().getId(),
+                        code
+                        )
+        ));
+
+        return ResponseEntity.ok("Requisição para deletar a caderneta enviada com sucesso!");
+
     }
 
+    @DeleteMapping("/{notebookId}/delete")
+    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
+    public ResponseEntity<?> deleteNotebook(
+            @PathVariable(value = "notebookId") UUID notebookId,
+            @RequestParam(value = "vCode") Integer vCode
+    ) {
+
+        var notebookOptional = notebookService.findNotebookById(notebookId);
+        if (notebookOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Caderneta não encontrada!");
+        }
+
+        var auth = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (!notebookOptional.get().getUser().getId().equals(auth)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("Você não pode deletar a caderneta de outros usuários!");
+        }
+
+        var vCodeOptional = vCodeService.findByUserIdAndType(
+                notebookOptional.get().getUser().getId(), VCodeEnum.NOTEBOOK_DELETE);
+        if (vCodeOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Nenhuma requisição para deletar essa caderneta encontrada!");
+        }
+
+        if (!vCodeOptional.get().getCode().equals(vCode)) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Código de verificação errado!");
+        }
+
+        notebookService.deleteNotebookById(notebookId);
+        vCodeService.deleteById(vCodeOptional.get().getId());
+
+        return ResponseEntity.ok("Caderneta deletada com sucesso!");
+
+    }
+
+    //DELETE
+
+
+
+
+    //VERIFICATIONS
+
     @GetMapping("/{teacherId}/all-missing-tasks")
-    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> verifyAllMissingTasks(
             @PathVariable(value = "teacherId") @NotNull UUID teacherId
     ) {
@@ -148,7 +259,7 @@ public class NotebookController {
     }
 
     @GetMapping("/{notebookId}/missing-tasks")
-    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> verifyMissingTasks(
             @PathVariable(value = "notebookId") UUID notebookId
     ) {
@@ -157,7 +268,7 @@ public class NotebookController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
         var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (!notebookOptional.get().getTeacher().getId().equals(authenticationId)) {
+        if (!notebookOptional.get().getUser().getId().equals(authenticationId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         var missingTasks = notebookService.verifyMissingTasksByNotebook(notebookOptional.get());
@@ -167,8 +278,15 @@ public class NotebookController {
         return ResponseEntity.ok(missingTasks);
     }
 
+    //VERIFICATIONS
+
+
+
+
+    //FINALIZATION
+
     @PutMapping("/finalize/{notebookId}")
-    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> finalizeNotebook(
             @PathVariable(value = "notebookId") UUID notebookId,
             @RequestBody Map<String, Integer> workTypeWeights) throws IOException {
@@ -177,7 +295,7 @@ public class NotebookController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
         var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (!notebookOptional.get().getTeacher().getId().equals(authenticationId)) {
+        if (!notebookOptional.get().getUser().getId().equals(authenticationId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         var file = notebookService.finalizeNotebook(notebookOptional.get(), workTypeWeights);
@@ -193,5 +311,10 @@ public class NotebookController {
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Caderneta não encontrada!");
     }
+
+    //FINALIZATION
+
+
+
 
 }

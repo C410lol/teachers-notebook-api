@@ -1,9 +1,7 @@
 package com.api.notebook.controllers;
 
 import com.api.notebook.models.dtos.LessonDto;
-import com.api.notebook.models.dtos.NotebookDto;
 import com.api.notebook.models.entities.LessonEntity;
-import com.api.notebook.models.entities.NotebookEntity;
 import com.api.notebook.services.LessonService;
 import com.api.notebook.services.NotebookService;
 import jakarta.validation.Valid;
@@ -31,7 +29,7 @@ public class LessonController {
     private final NotebookService notebookService;
 
     @PostMapping("/create") //POST endpoint to create a lesson entity
-    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> createLesson(@RequestParam(value = "notebookId") UUID notebookId,
                                                @RequestBody @Valid @NotNull LessonDto lessonDto) {
         var lessonEntity = new LessonEntity();
@@ -45,7 +43,7 @@ public class LessonController {
     }
 
     @GetMapping("/all") //GET endpoint to get all lessons
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ROLE_ADM')")
     public ResponseEntity<Object> getAllLessons() {
         var lessons = lessonService.findAllLessons();
         if (lessons.isEmpty()) {
@@ -55,7 +53,7 @@ public class LessonController {
     }
 
     @GetMapping("/all/{notebookId}") //GET endpoint to get all lessons
-    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> getAllLessonsByNotebookId(
             @PathVariable(value = "notebookId") UUID notebookId,
             @RequestParam(value = "pageNum", defaultValue = "0", required = false) String pageNum,
@@ -76,12 +74,12 @@ public class LessonController {
     }
 
     @GetMapping("/{lessonId}")
-    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> getLessonById(@PathVariable(value = "lessonId") UUID lessonId) {
         var lessonOptional = lessonService.findLessonById(lessonId);
         if (lessonOptional.isPresent()) {
             var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            if (lessonOptional.get().getNotebook().getTeacher().getId().equals(authenticationId)) {
+            if (lessonOptional.get().getNotebook().getUser().getId().equals(authenticationId)) {
                 return ResponseEntity.ok(lessonOptional.get());
             }
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
@@ -90,13 +88,13 @@ public class LessonController {
     }
 
     @PutMapping("/edit/{lessonId}")
-    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> editLesson(@PathVariable(value = "lessonId") UUID lessonId,
                                                @RequestBody @Valid LessonDto lessonDto) {
         var lessonOptional = lessonService.findLessonById(lessonId);
         if (lessonOptional.isPresent()) {
             var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            if (lessonOptional.get().getNotebook().getTeacher().getId().equals(authenticationId)) {
+            if (lessonOptional.get().getNotebook().getUser().getId().equals(authenticationId)) {
                 var lessonEntity = new LessonEntity();
                 BeanUtils.copyProperties(lessonOptional.get(), lessonEntity);
                 BeanUtils.copyProperties(lessonDto, lessonEntity);
@@ -109,12 +107,12 @@ public class LessonController {
     }
 
     @DeleteMapping("/delete/{lessonId}")
-    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> deleteLesson(@PathVariable(value = "lessonId") UUID lessonId) {
         var lessonOptional = lessonService.findLessonById(lessonId);
         if (lessonOptional.isPresent()) {
             var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            if (lessonOptional.get().getNotebook().getTeacher().getId().equals(authenticationId)) {
+            if (lessonOptional.get().getNotebook().getUser().getId().equals(authenticationId)) {
                 lessonService.deleteLessonById(lessonId);
                 return ResponseEntity.ok().build();
             }
