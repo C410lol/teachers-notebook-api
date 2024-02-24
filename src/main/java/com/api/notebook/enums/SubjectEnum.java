@@ -2,18 +2,23 @@ package com.api.notebook.enums;
 
 public enum SubjectEnum {
 
-    Português,
-    Literatura,
+    Arte,
+    Biologia,
+    Ciências,
+    Educação_Física,
+    Filosofia,
+    Física,
     Geografia,
     História,
-    Filosofia,
-    Matemática,
-    Física,
-    Química,
-    Biologia,
     Inglês,
-    Arte,
-    Educação_Física,
-    Projeto_De_Vida
+    Literatura,
+    Maker,
+    Matemática,
+    Português,
+    Projeto_De_Vida,
+    Química,
+    Sociologia,
+    Tecnologia_e_Comunicação
+
 
 }

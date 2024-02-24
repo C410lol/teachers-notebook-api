@@ -34,7 +34,7 @@ public class NotebookService {
     }
 
     public Page<NotebookEntity> findAllNotebooksByTeacherId(UUID teacherId, Pageable pageable) {
-        return notebookRepository.findByTeacherId(teacherId, pageable);
+        return notebookRepository.findByUserId(teacherId, pageable);
     }
 
     public Optional<NotebookEntity> findNotebookById(UUID id) {
@@ -56,7 +56,7 @@ public class NotebookService {
     }
 
     public MissingTasksModel verifyAllMissingTasks(UUID teacherId) {
-        var notebooks = notebookRepository.findByTeacherId(teacherId);
+        var notebooks = notebookRepository.findByUserId(teacherId);
         List<MissingTaskLessonModel> allMissingLessons = new ArrayList<>();
         List<MissingTaskWorkModel> allMissingWorks = new ArrayList<>();
 

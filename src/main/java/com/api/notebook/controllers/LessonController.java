@@ -1,9 +1,8 @@
 package com.api.notebook.controllers;
 
 import com.api.notebook.models.dtos.LessonDto;
-import com.api.notebook.models.dtos.NotebookDto;
 import com.api.notebook.models.entities.LessonEntity;
-import com.api.notebook.models.entities.NotebookEntity;
+import com.api.notebook.services.BNCCCodeService;
 import com.api.notebook.services.LessonService;
 import com.api.notebook.services.NotebookService;
 import jakarta.validation.Valid;
@@ -29,15 +28,28 @@ public class LessonController {
 
     private final LessonService lessonService;
     private final NotebookService notebookService;
+    private final BNCCCodeService bnccCodeService;
 
     @PostMapping("/create") //POST endpoint to create a lesson entity
-    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
-    public ResponseEntity<Object> createLesson(@RequestParam(value = "notebookId") UUID notebookId,
-                                               @RequestBody @Valid @NotNull LessonDto lessonDto) {
+    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
+    public ResponseEntity<Object> createLesson(
+            @RequestParam(value = "notebookId") UUID notebookId,
+            @RequestBody @Valid @NotNull LessonDto lessonDto
+    ) {
         var lessonEntity = new LessonEntity();
-        BeanUtils.copyProperties(lessonDto, lessonEntity);
+        lessonEntity.setTitle(lessonDto.getTitle());
+        lessonEntity.setDetails(lessonDto.getDetails());
+        lessonEntity.setObservations(lessonDto.getObservations());
+        lessonEntity.setQuantity(lessonDto.getQuantity());
+        lessonEntity.setDate(lessonDto.getDate());
+
         if (lessonEntity.getDate() == null) {
             lessonEntity.setDate(LocalDate.now(ZoneId.of("UTC-3")));
+        }
+        if (lessonDto.getBnccCodes() != null && !lessonDto.getBnccCodes().isEmpty()) {
+            if (!bnccCodeService.setBnccCodesToLesson(lessonDto.getBnccCodes(), lessonEntity)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Código BNCC não reconhecido!");
+            }
         }
         notebookService.setLessonToNotebook(notebookId, lessonEntity);
         lessonService.saveLesson(lessonEntity);
@@ -45,7 +57,7 @@ public class LessonController {
     }
 
     @GetMapping("/all") //GET endpoint to get all lessons
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ROLE_ADM')")
     public ResponseEntity<Object> getAllLessons() {
         var lessons = lessonService.findAllLessons();
         if (lessons.isEmpty()) {
@@ -55,7 +67,7 @@ public class LessonController {
     }
 
     @GetMapping("/all/{notebookId}") //GET endpoint to get all lessons
-    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> getAllLessonsByNotebookId(
             @PathVariable(value = "notebookId") UUID notebookId,
             @RequestParam(value = "pageNum", defaultValue = "0", required = false) String pageNum,
@@ -76,12 +88,12 @@ public class LessonController {
     }
 
     @GetMapping("/{lessonId}")
-    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> getLessonById(@PathVariable(value = "lessonId") UUID lessonId) {
         var lessonOptional = lessonService.findLessonById(lessonId);
         if (lessonOptional.isPresent()) {
             var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            if (lessonOptional.get().getNotebook().getTeacher().getId().equals(authenticationId)) {
+            if (lessonOptional.get().getNotebook().getUser().getId().equals(authenticationId)) {
                 return ResponseEntity.ok(lessonOptional.get());
             }
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
@@ -90,16 +102,22 @@ public class LessonController {
     }
 
     @PutMapping("/edit/{lessonId}")
-    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
-    public ResponseEntity<Object> editLesson(@PathVariable(value = "lessonId") UUID lessonId,
-                                               @RequestBody @Valid LessonDto lessonDto) {
+    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
+    public ResponseEntity<Object> editLesson(
+            @PathVariable(value = "lessonId") UUID lessonId,
+            @RequestBody @Valid LessonDto lessonDto) {
         var lessonOptional = lessonService.findLessonById(lessonId);
         if (lessonOptional.isPresent()) {
             var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            if (lessonOptional.get().getNotebook().getTeacher().getId().equals(authenticationId)) {
+            if (lessonOptional.get().getNotebook().getUser().getId().equals(authenticationId)) {
                 var lessonEntity = new LessonEntity();
                 BeanUtils.copyProperties(lessonOptional.get(), lessonEntity);
                 BeanUtils.copyProperties(lessonDto, lessonEntity);
+                if (lessonDto.getBnccCodes() != null && !lessonDto.getBnccCodes().isEmpty()) {
+                    if (!bnccCodeService.setBnccCodesToLesson(lessonDto.getBnccCodes(), lessonEntity)) {
+                        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Código BNCC não reconhecido!");
+                    }
+                }
                 lessonService.saveLesson(lessonEntity);
                 return ResponseEntity.ok().build();
             }
@@ -109,12 +127,12 @@ public class LessonController {
     }
 
     @DeleteMapping("/delete/{lessonId}")
-    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> deleteLesson(@PathVariable(value = "lessonId") UUID lessonId) {
         var lessonOptional = lessonService.findLessonById(lessonId);
         if (lessonOptional.isPresent()) {
             var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            if (lessonOptional.get().getNotebook().getTeacher().getId().equals(authenticationId)) {
+            if (lessonOptional.get().getNotebook().getUser().getId().equals(authenticationId)) {
                 lessonService.deleteLessonById(lessonId);
                 return ResponseEntity.ok().build();
             }

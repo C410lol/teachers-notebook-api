@@ -46,15 +46,16 @@ public class NotebookEntity {
 
     @ManyToOne
     @JsonIgnore
-    @JoinColumn(name = "teacher_id")
-    private TeacherEntity teacher;
+    @JoinColumn(name = "user_id")
+    private UserEntity user;
 
     @JsonIgnore
     @ManyToMany
     @JoinTable(
             name = "notebooks_students",
             joinColumns = {@JoinColumn(name = "notebook_id")},
-            inverseJoinColumns = {@JoinColumn(name = "student_id")})
+            inverseJoinColumns = {@JoinColumn(name = "student_id")}
+    )
     private List<StudentEntity> students;
 
     @JsonIgnore

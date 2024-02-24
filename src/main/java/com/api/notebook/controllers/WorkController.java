@@ -29,7 +29,7 @@ public class WorkController {
     private final NotebookService notebookService;
 
     @PostMapping("/create") //POST endpoint to create a work entity
-    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> createWork(@RequestParam(value = "notebookId") UUID notebookId,
                                                @RequestBody @Valid @NotNull WorkDto workDto) {
         var workEntity = new WorkEntity();
@@ -43,7 +43,7 @@ public class WorkController {
     }
 
     @GetMapping("/all") //GET endpoint to get all works
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ROLE_ADM')")
     public ResponseEntity<Object> getAllWorks() {
         var works = workService.findAllWorks();
         if (works.isEmpty()) {
@@ -53,7 +53,7 @@ public class WorkController {
     }
 
     @GetMapping("/all/{notebookId}") //GET endpoint to get all works
-    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> getAllWorksByNotebookId(
             @PathVariable(value = "notebookId") UUID notebookId,
             @RequestParam(value = "pageNum", defaultValue = "0", required = false) String pageNum,
@@ -74,12 +74,12 @@ public class WorkController {
     }
 
     @GetMapping("/{workId}")
-    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> getWorkById(@PathVariable(value = "workId") UUID workId) {
         var workOptional = workService.findWorkById(workId);
         if (workOptional.isPresent()) {
             var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            if (workOptional.get().getNotebook().getTeacher().getId().equals(authenticationId)) {
+            if (workOptional.get().getNotebook().getUser().getId().equals(authenticationId)) {
                 return ResponseEntity.ok(workOptional.get());
             }
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
@@ -88,13 +88,13 @@ public class WorkController {
     }
 
     @PutMapping("/edit/{workId}")
-    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> editWork(@PathVariable(value = "workId") UUID workId,
                                              @RequestBody @Valid WorkDto workDto) {
         var workOptional = workService.findWorkById(workId);
         if (workOptional.isPresent()) {
             var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            if (workOptional.get().getNotebook().getTeacher().getId().equals(authenticationId)) {
+            if (workOptional.get().getNotebook().getUser().getId().equals(authenticationId)) {
                 var workEntity = new WorkEntity();
                 BeanUtils.copyProperties(workOptional.get(), workEntity);
                 BeanUtils.copyProperties(workDto, workEntity);
@@ -107,12 +107,12 @@ public class WorkController {
     }
 
     @DeleteMapping("/delete/{workId}")
-    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> deleteWork(@PathVariable(value = "workId") UUID workId) {
         var workOptional = workService.findWorkById(workId);
         if (workOptional.isPresent()) {
             var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            if (workOptional.get().getNotebook().getTeacher().getId().equals(authenticationId)) {
+            if (workOptional.get().getNotebook().getUser().getId().equals(authenticationId)) {
                 workService.deleteWorkById(workId);
                 return ResponseEntity.ok().build();
             }

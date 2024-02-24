@@ -2,7 +2,7 @@ package com.api.notebook.enums;
 
 public enum RoleEnum {
 
-    ROLE_ADMIN,
-    ROLE_USER
+    ROLE_ADM, //Admin Role
+    ROLE_TCHR //Teacher Role
 
 }
