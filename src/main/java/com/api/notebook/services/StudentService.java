@@ -29,6 +29,10 @@ public class StudentService {
         return studentRepository.findAll();
     }
 
+    public List<StudentEntity> findAllStudentsByClasse(ClassEnum classe) {
+        return studentRepository.findAllByClasse(classe);
+    }
+
     public Optional<StudentEntity> findStudentById(UUID id) {
         return studentRepository.findById(id);
     }
@@ -69,15 +73,8 @@ public class StudentService {
     }
 
     //Set students to notebook by class enum
-    public void setStudentsToNotebookByClass(ClassEnum classEnum, NotebookEntity notebook) {
-        List<StudentEntity> students = new ArrayList<>();
-        for (StudentEntity student:
-                findAllStudents()) {
-            if (student.getClasse().equals(classEnum)) {
-                students.add(student);
-            }
-        }
-        notebook.setStudents(students);
+    public void setStudentsToNotebookByClass(ClassEnum classEnum, @NotNull NotebookEntity notebook) {
+        notebook.setStudents(studentRepository.findAllByClasse(classEnum));
     }
 
 }
