@@ -2,7 +2,7 @@ package com.api.notebook.services;
 
 import com.api.notebook.enums.VCodeEnum;
 import com.api.notebook.models.entities.VCodeEntity;
-import com.api.notebook.repositories.VerificationCodeRepository;
+import com.api.notebook.repositories.VCodeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -13,22 +13,22 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class VCodeService {
 
-    private final VerificationCodeRepository verificationCodeRepository;
+    private final VCodeRepository vCodeRepository;
 
     public void save(VCodeEntity verificationCode) {
-        verificationCodeRepository.save(verificationCode);
+        vCodeRepository.save(verificationCode);
     }
 
     public Optional<VCodeEntity> findByUserIdAndType(UUID userId, VCodeEnum type) {
-        return verificationCodeRepository.findByUserIdAndType(userId, type);
+        return vCodeRepository.findByUserIdAndType(userId, type);
     }
 
     public boolean existsByUserIdAndType(UUID userId, VCodeEnum type) {
-        return verificationCodeRepository.existsByUserIdAndType(userId, type);
+        return vCodeRepository.existsByUserIdAndType(userId, type);
     }
 
     public void deleteById(Long id) {
-        verificationCodeRepository.deleteById(id);
+        vCodeRepository.deleteById(id);
     }
 
 }
