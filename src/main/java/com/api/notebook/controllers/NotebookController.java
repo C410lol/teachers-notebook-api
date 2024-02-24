@@ -142,6 +142,17 @@ public class NotebookController {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Caderneta não encontrada!");
     }
 
+    @PutMapping("refresh-all")
+    @PreAuthorize("hasAnyRole('ROLE_ADM')")
+    public void refreshAllNotebooks() {
+        var allNotebooks = notebookService.findAllNotebooks();
+        for (NotebookEntity notebook:
+                allNotebooks) {
+            studentService.setStudentsToNotebookByClass(notebook.getClasse(), notebook);
+            notebookService.saveNotebook(notebook);
+        }
+    }
+
     //EDIT
 
 

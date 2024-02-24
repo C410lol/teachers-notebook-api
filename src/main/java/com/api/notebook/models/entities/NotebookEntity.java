@@ -54,7 +54,8 @@ public class NotebookEntity {
     @JoinTable(
             name = "notebooks_students",
             joinColumns = {@JoinColumn(name = "notebook_id")},
-            inverseJoinColumns = {@JoinColumn(name = "student_id")})
+            inverseJoinColumns = {@JoinColumn(name = "student_id")}
+    )
     private List<StudentEntity> students;
 
     @JsonIgnore
