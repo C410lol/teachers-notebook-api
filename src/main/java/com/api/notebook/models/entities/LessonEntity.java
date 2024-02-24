@@ -34,6 +34,14 @@ public class LessonEntity {
     @Column(name = "date")
     private LocalDate date;
 
+    @ManyToMany
+    @JoinTable(
+            name = "lessons_bncc_codes",
+            joinColumns = {@JoinColumn(name = "lesson_id")},
+            inverseJoinColumns = {@JoinColumn(name = "bncc_code_id")}
+    )
+    private List<BNCCCodeEntity> bnccCodes;
+
     @ManyToOne
     @JsonIgnore
     @JoinColumn(name = "notebook_id")

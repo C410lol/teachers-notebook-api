@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 public class LessonDto {
@@ -16,6 +17,8 @@ public class LessonDto {
     private String details;
 
     private String observations;
+
+    private List<String> bnccCodes;
 
     @NotNull
     private Integer quantity;

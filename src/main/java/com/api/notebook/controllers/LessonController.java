@@ -2,6 +2,7 @@ package com.api.notebook.controllers;
 
 import com.api.notebook.models.dtos.LessonDto;
 import com.api.notebook.models.entities.LessonEntity;
+import com.api.notebook.services.BNCCCodeService;
 import com.api.notebook.services.LessonService;
 import com.api.notebook.services.NotebookService;
 import jakarta.validation.Valid;
@@ -27,15 +28,28 @@ public class LessonController {
 
     private final LessonService lessonService;
     private final NotebookService notebookService;
+    private final BNCCCodeService bnccCodeService;
 
     @PostMapping("/create") //POST endpoint to create a lesson entity
     @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
-    public ResponseEntity<Object> createLesson(@RequestParam(value = "notebookId") UUID notebookId,
-                                               @RequestBody @Valid @NotNull LessonDto lessonDto) {
+    public ResponseEntity<Object> createLesson(
+            @RequestParam(value = "notebookId") UUID notebookId,
+            @RequestBody @Valid @NotNull LessonDto lessonDto
+    ) {
         var lessonEntity = new LessonEntity();
-        BeanUtils.copyProperties(lessonDto, lessonEntity);
+        lessonEntity.setTitle(lessonDto.getTitle());
+        lessonEntity.setDetails(lessonDto.getDetails());
+        lessonEntity.setObservations(lessonDto.getObservations());
+        lessonEntity.setQuantity(lessonDto.getQuantity());
+        lessonEntity.setDate(lessonDto.getDate());
+
         if (lessonEntity.getDate() == null) {
             lessonEntity.setDate(LocalDate.now(ZoneId.of("UTC-3")));
+        }
+        if (lessonDto.getBnccCodes() != null && !lessonDto.getBnccCodes().isEmpty()) {
+            if (!bnccCodeService.setBnccCodesToLesson(lessonDto.getBnccCodes(), lessonEntity)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Código BNCC não reconhecido!");
+            }
         }
         notebookService.setLessonToNotebook(notebookId, lessonEntity);
         lessonService.saveLesson(lessonEntity);
@@ -89,8 +103,9 @@ public class LessonController {
 
     @PutMapping("/edit/{lessonId}")
     @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
-    public ResponseEntity<Object> editLesson(@PathVariable(value = "lessonId") UUID lessonId,
-                                               @RequestBody @Valid LessonDto lessonDto) {
+    public ResponseEntity<Object> editLesson(
+            @PathVariable(value = "lessonId") UUID lessonId,
+            @RequestBody @Valid LessonDto lessonDto) {
         var lessonOptional = lessonService.findLessonById(lessonId);
         if (lessonOptional.isPresent()) {
             var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -98,6 +113,11 @@ public class LessonController {
                 var lessonEntity = new LessonEntity();
                 BeanUtils.copyProperties(lessonOptional.get(), lessonEntity);
                 BeanUtils.copyProperties(lessonDto, lessonEntity);
+                if (lessonDto.getBnccCodes() != null && !lessonDto.getBnccCodes().isEmpty()) {
+                    if (!bnccCodeService.setBnccCodesToLesson(lessonDto.getBnccCodes(), lessonEntity)) {
+                        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Código BNCC não reconhecido!");
+                    }
+                }
                 lessonService.saveLesson(lessonEntity);
                 return ResponseEntity.ok().build();
             }
