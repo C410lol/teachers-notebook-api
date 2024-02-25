@@ -24,6 +24,9 @@ public class StudentEntity {
     @Column(name = "number")
     private Integer number;
 
+    @Column(name = "is_order")
+    private Boolean isOrder;
+
     @Column(name = "classe")
     @Enumerated(value = EnumType.STRING)
     private ClassEnum classe;

@@ -16,4 +16,7 @@ public class StudentDto {
     @NotNull
     private ClassEnum classe;
 
+    @NotNull
+    private Boolean isOrder;
+
 }
