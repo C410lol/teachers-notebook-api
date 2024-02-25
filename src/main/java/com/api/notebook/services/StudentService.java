@@ -6,31 +6,38 @@ import com.api.notebook.models.entities.GradeEntity;
 import com.api.notebook.models.entities.NotebookEntity;
 import com.api.notebook.models.entities.StudentEntity;
 import com.api.notebook.repositories.StudentRepository;
+import com.api.notebook.utils.StudentComparator;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
 public class StudentService {
 
     private final StudentRepository studentRepository;
+    private final StudentComparator studentComparator = new StudentComparator();
 
     public void saveStudent(StudentEntity student) {
         studentRepository.save(student);
     }
 
+    public void saveAll(List<StudentEntity> students) {
+        studentRepository.saveAll(students);
+    }
+
     public List<StudentEntity> findAllStudents() {
-        return studentRepository.findAll();
+        var all = studentRepository.findAll();
+        all.sort(Comparator.comparing(StudentEntity::getNumber));
+        return all;
     }
 
     public List<StudentEntity> findAllStudentsByClasse(ClassEnum classe) {
-        return studentRepository.findAllByClasse(classe);
+        var allByClasse = studentRepository.findAllByClasse(classe);
+        allByClasse.sort(Comparator.comparing(StudentEntity::getNumber));
+        return allByClasse;
     }
 
     public Optional<StudentEntity> findStudentById(UUID id) {
