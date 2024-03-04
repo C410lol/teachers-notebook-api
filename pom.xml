@@ -114,7 +114,7 @@
 				</configuration>
 			</plugin>
 		</plugins>
-		<finalName>teacher-notes-hub-api</finalName>
+		<finalName>teachers-notebook-api</finalName>
 	</build>
 
 </project>
