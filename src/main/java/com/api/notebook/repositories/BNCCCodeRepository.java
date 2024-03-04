@@ -14,7 +14,9 @@ import java.util.UUID;
 public interface BNCCCodeRepository extends JpaRepository<BNCCCodeEntity, UUID> {
 
     @Query(
-            value = "SELECT * FROM bncc_codes WHERE (code LIKE %:pattern% OR description LIKE %:pattern%) " +
+            value = "SELECT * FROM bncc_codes WHERE (UPPER(code) LIKE " +
+                    "UPPER(concat('%', :pattern, '%')) OR UPPER(description) " +
+                    "LIKE UPPER(concat('%', :pattern, '%'))) " +
                     "AND " +
                     ":subject = ANY(subjects) " +
                     "AND " +
