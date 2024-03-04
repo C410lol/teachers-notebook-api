@@ -1,0 +1,20 @@
+#server:
+  #port: 8443
+  #ssl:
+    #key-store: c410-keystore-v01.p12
+    #key-store-password: 110707Caio
+    #key-store-type: PKCS12
+    #key-alias: teachernoteshub-alias
+
+spring:
+
+  datasource:
+    url: jdbc:postgresql://roundhouse.proxy.rlwy.net:15973/railway
+    username: postgres
+    password: 2C-Bb6-G1245G*54D-dCEdAAFe64*e-3
+
+  rabbitmq:
+    addresses: amqps://xscejgug:kFQJpR8dn5lIJKtK-rdfmXLBAtsIuDXO@prawn.rmq.cloudamqp.com/xscejgug
+    queue: mail-server-queue
+    exchange: teacher-notes-hub-exchange
+    routing-key: teacher_notes_hub_routing_key
