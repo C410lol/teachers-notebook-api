@@ -1,5 +1,6 @@
 package com.api.notebook.controllers;
 
+import com.api.notebook.enums.RoleEnum;
 import com.api.notebook.enums.StatusEnum;
 import com.api.notebook.enums.VCodeEnum;
 import com.api.notebook.models.EmailModel;
@@ -21,6 +22,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -84,8 +86,11 @@ public class NotebookController {
             @RequestParam(value = "direction", defaultValue = "desc", required = false) String direction,
             @RequestParam(value = "sortBy", defaultValue = "status", required = false) String sortBy
     ) {
-        var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (!authenticationId.equals(teacherId)) {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (
+                !authentication.getPrincipal().equals(teacherId) &&
+                !authentication.getAuthorities().contains(new SimpleGrantedAuthority(RoleEnum.ROLE_ADM.name()))
+        ) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         var pageable = PageRequest.of(

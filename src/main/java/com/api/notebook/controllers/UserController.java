@@ -21,6 +21,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -93,12 +94,15 @@ public class UserController {
     public ResponseEntity<Object> getUserById(@PathVariable(value = "teacherId") UUID teacherId) {
         var userOptional = userService.findUserById(teacherId);
         if (userOptional.isPresent()) {
-            var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            if (authenticationId.equals(teacherId)) {
-                return ResponseEntity.ok(userOptional.get());
+            var authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (
+                    !authentication.getPrincipal().equals(teacherId) &&
+                    !authentication.getAuthorities().contains(new SimpleGrantedAuthority(RoleEnum.ROLE_ADM.name()))
+            ) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body("Não é possível visualizar a conta de outros usuários!");
             }
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body("Não é possível visualizar a conta de outros usuários!");
+            return ResponseEntity.ok(userOptional.get());
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuário não encontrado!");
     }
