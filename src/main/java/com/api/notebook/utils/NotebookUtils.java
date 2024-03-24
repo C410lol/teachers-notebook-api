@@ -29,7 +29,7 @@ public class NotebookUtils {
         var byteArrayOutputStream = new ByteArrayOutputStream();
         var notebookWorkbook = new XSSFWorkbook();
 
-        notebook.getStudents().sort(Comparator.comparing(StudentEntity::getName));
+        notebook.getStudents().sort(Comparator.comparing(StudentEntity::getNumber));
         notebook.getLessons().sort(Comparator.comparing(LessonEntity::getDate));
         notebook.getWorks().sort(Comparator.comparing(WorkEntity::getDeliveryDate));
 
