@@ -5,8 +5,8 @@ target/
 !**/src/test/**/target/
 
 ### RESOURCE FILES ###
-#src/main/resources/application.properties
-#src/main/resources/application.yaml
+src/main/resources/application.properties
+src/main/resources/application.yaml
 
 ### STS ###
 .apt_generated
