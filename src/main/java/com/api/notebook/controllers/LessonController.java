@@ -1,5 +1,6 @@
 package com.api.notebook.controllers;
 
+import com.api.notebook.enums.RoleEnum;
 import com.api.notebook.models.dtos.LessonDto;
 import com.api.notebook.models.entities.LessonEntity;
 import com.api.notebook.services.BNCCCodeService;
@@ -14,6 +15,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -92,11 +94,14 @@ public class LessonController {
     public ResponseEntity<Object> getLessonById(@PathVariable(value = "lessonId") UUID lessonId) {
         var lessonOptional = lessonService.findLessonById(lessonId);
         if (lessonOptional.isPresent()) {
-            var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            if (lessonOptional.get().getNotebook().getUser().getId().equals(authenticationId)) {
-                return ResponseEntity.ok(lessonOptional.get());
+            var authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (
+                    !lessonOptional.get().getNotebook().getUser().getId().equals(authentication.getPrincipal()) &&
+                    !authentication.getAuthorities().contains(new SimpleGrantedAuthority(RoleEnum.ROLE_ADM.name()))
+            ) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            return ResponseEntity.ok(lessonOptional.get());
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Aula não encontrada!");
     }

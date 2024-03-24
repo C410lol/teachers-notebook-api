@@ -1,5 +1,6 @@
 package com.api.notebook.controllers;
 
+import com.api.notebook.enums.RoleEnum;
 import com.api.notebook.models.dtos.WorkDto;
 import com.api.notebook.models.entities.WorkEntity;
 import com.api.notebook.services.NotebookService;
@@ -13,6 +14,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -78,11 +80,14 @@ public class WorkController {
     public ResponseEntity<Object> getWorkById(@PathVariable(value = "workId") UUID workId) {
         var workOptional = workService.findWorkById(workId);
         if (workOptional.isPresent()) {
-            var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            if (workOptional.get().getNotebook().getUser().getId().equals(authenticationId)) {
-                return ResponseEntity.ok(workOptional.get());
+            var authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (
+                    !workOptional.get().getNotebook().getUser().getId().equals(authentication.getPrincipal()) &&
+                    !authentication.getAuthorities().contains(new SimpleGrantedAuthority(RoleEnum.ROLE_ADM.name()))
+            ) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            return ResponseEntity.ok(workOptional.get());
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Trabalho/Tarefa não encontrada!");
     }

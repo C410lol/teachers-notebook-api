@@ -111,11 +111,14 @@ public class NotebookController {
     public ResponseEntity<Object> getNotebookById(@PathVariable(value = "notebookId") UUID notebookId) {
         var notebook = notebookService.findNotebookById(notebookId);
         if (notebook.isPresent()) {
-            var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            if (notebook.get().getUser().getId().equals(authenticationId)) {
-                return ResponseEntity.ok(notebook.get());
+            var authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (
+                    !notebook.get().getUser().getId().equals(authentication.getPrincipal()) &&
+                    !authentication.getAuthorities().contains(new SimpleGrantedAuthority(RoleEnum.ROLE_ADM.name()))
+            ) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            return ResponseEntity.ok(notebook.get());
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Caderneta não encontrada!");
     }
