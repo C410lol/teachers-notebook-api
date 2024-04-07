@@ -15,5 +15,6 @@ public class AuthReturnModel {
     private String token;
     private String name;
     private String email;
+    private String role;
 
 }
