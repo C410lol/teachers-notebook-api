@@ -69,7 +69,12 @@ public class UserService {
         }
 
         var token = jwtService.generateToken(userOptional.get().getEmail());
-        return new AuthTryModel(AuthTryEnum.OK, new AuthReturnModel(userOptional.get().getId(), token));
+        return new AuthTryModel(AuthTryEnum.OK, new AuthReturnModel(
+            userOptional.get().getId(), 
+            token,
+            userOptional.get().getName(),
+            userOptional.get().getEmail()
+        );
     }
 
     public void setVCodeToUser(UUID userId, @NotNull VCodeEntity verificationCode) {
