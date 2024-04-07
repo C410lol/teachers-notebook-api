@@ -74,7 +74,7 @@ public class UserService {
             token,
             userOptional.get().getName(),
             userOptional.get().getEmail()
-        );
+        ));
     }
 
     public void setVCodeToUser(UUID userId, @NotNull VCodeEntity verificationCode) {
