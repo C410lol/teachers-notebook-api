@@ -73,7 +73,8 @@ public class UserService {
             userOptional.get().getId(), 
             token,
             userOptional.get().getName(),
-            userOptional.get().getEmail()
+            userOptional.get().getEmail(),
+            userOptional.get().getRole()
         ));
     }
 
