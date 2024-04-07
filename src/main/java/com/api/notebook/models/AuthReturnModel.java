@@ -13,5 +13,7 @@ public class AuthReturnModel {
 
     private UUID userId;
     private String token;
+    private String name;
+    private String email;
 
 }
