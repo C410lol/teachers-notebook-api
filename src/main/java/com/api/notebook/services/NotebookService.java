@@ -85,7 +85,7 @@ public class NotebookService {
         }
         for (WorkEntity work:
                 notebook.getWorks()) {
-            if (work.getGrades().size() != notebook.getStudents().size()) {
+            if (work.getGrades().size() < notebook.getStudents().size()) {
                 missingWorks.add(new MissingTaskWorkModel(
                         work.getId(),
                         work.getTitle(),
