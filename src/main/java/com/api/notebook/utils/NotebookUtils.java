@@ -1,42 +1,35 @@
 package com.api.notebook.utils;
 
 import com.api.notebook.models.entities.*;
-import com.api.notebook.services.LessonService;
-import com.api.notebook.services.NotebookService;
-import com.api.notebook.services.WorkService;
-import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 
 public class NotebookUtils {
 
     public static @NotNull ByteArrayOutputStream finalizeNotebook(
             @NotNull NotebookEntity notebook,
+            @NotNull List<StudentEntity> students,
             Map<String, Integer> workTypeWeights
     ) throws IOException {
         var byteArrayOutputStream = new ByteArrayOutputStream();
         var notebookWorkbook = new XSSFWorkbook();
 
-        notebook.getStudents().sort(Comparator.comparing(StudentEntity::getNumber));
+        students.sort(Comparator.comparing(StudentEntity::getNumber));
         notebook.getLessons().sort(Comparator.comparing(LessonEntity::getDate));
         notebook.getWorks().sort(Comparator.comparing(WorkEntity::getDeliveryDate));
 
-        createFrequenciasSheet(notebookWorkbook, notebook);
-        createMediasSheet(notebookWorkbook, notebook, workTypeWeights);
+        createFrequenciasSheet(notebookWorkbook, notebook, students);
+        createMediasSheet(notebookWorkbook, notebook, students, workTypeWeights);
         createObservacoesSheet(notebookWorkbook, notebook);
-        createFerramentasDeAvaliacaoSheet(notebookWorkbook, notebook, workTypeWeights);
+        createFerramentasDeAvaliacaoSheet(notebookWorkbook, notebook, students, workTypeWeights);
 
         notebookWorkbook.write(byteArrayOutputStream);
 
@@ -45,7 +38,8 @@ public class NotebookUtils {
 
     private static void createFrequenciasSheet(
             @NotNull XSSFWorkbook workbook,
-            @NotNull NotebookEntity notebook
+            @NotNull NotebookEntity notebook,
+            List<StudentEntity> students
     ) {
         var frequenciasSheet = workbook.createSheet("Frequências");
 
@@ -87,15 +81,13 @@ public class NotebookUtils {
         //Setting lessons date in the sheet header
 
         var studentRowCount = 1;
-        var studentNumberCount = 1;
         for (StudentEntity student:
-                notebook.getStudents()) {
+                students) {
             var studentRow = frequenciasSheet.createRow(studentRowCount);
             studentRowCount++;
 
-            ExcelUtils.createRowCell(studentRow, 0, String.valueOf(studentNumberCount));
+            ExcelUtils.createRowCell(studentRow, 0, String.valueOf(student.getNumber()));
             ExcelUtils.createRowCell(studentRow, 1, student.getName());
-            studentNumberCount++;
 
             var studentCellCount = 2;
             for (LessonEntity lesson:
@@ -122,6 +114,7 @@ public class NotebookUtils {
     private static void createMediasSheet(
             @NotNull XSSFWorkbook workbook,
             NotebookEntity notebook,
+            List<StudentEntity> students,
             @NotNull Map<String, Integer> workTypeWeights
     ) {
         var mediasSheet = workbook.createSheet("Médias");
@@ -156,15 +149,13 @@ public class NotebookUtils {
         //Setting 'media' column width
 
         var studentRowCount = 1;
-        var studentNumberCount = 1;
         for (StudentEntity student:
-                notebook.getStudents()) {
+                students) {
             var studentRow = mediasSheet.createRow(studentRowCount);
             studentRowCount++;
 
-            ExcelUtils.createRowCell(studentRow, 0, String.valueOf(studentNumberCount));
+            ExcelUtils.createRowCell(studentRow, 0, String.valueOf(student.getNumber()));
             ExcelUtils.createRowCell(studentRow, 1, student.getName());
-            studentNumberCount++;
 
             var finalGrade = 0.0;
 
@@ -241,6 +232,7 @@ public class NotebookUtils {
     private static void createFerramentasDeAvaliacaoSheet(
             @NotNull XSSFWorkbook workbook,
             NotebookEntity notebook,
+            List<StudentEntity> students,
             @NotNull Map<String, Integer> workTypeWeights
     ) {
         var ferramentasSheet = workbook.createSheet("Ferramentas De Avaliação");
@@ -300,9 +292,8 @@ public class NotebookUtils {
         //Create sheet header
 
         var studentRowCount = 2;
-        var studentNumberCount = 1;
         for (StudentEntity student:
-                notebook.getStudents()) {
+                students) {
 
             //Create student row
             var studentRow = ferramentasSheet.createRow(studentRowCount);
@@ -310,9 +301,8 @@ public class NotebookUtils {
             //Create student row
 
             //Create student's firsts cells
-            ExcelUtils.createRowCell(studentRow, 0, String.valueOf(studentNumberCount));
+            ExcelUtils.createRowCell(studentRow, 0, String.valueOf(student.getNumber()));
             ExcelUtils.createRowCell(studentRow, 1, student.getName());
-            studentNumberCount++;
             //Create student's firsts cells
 
             var studentCellCount = 2;
