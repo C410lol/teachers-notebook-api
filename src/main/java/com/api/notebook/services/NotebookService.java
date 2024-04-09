@@ -97,8 +97,12 @@ public class NotebookService {
     }
 
     //Finish notebook and return all students average
-    public ByteArrayResource finalizeNotebook(NotebookEntity notebook, Map<String, Integer> workTypeWeights) throws IOException {
-        var finalizedNotebook = NotebookUtils.finalizeNotebook(notebook, workTypeWeights);
+    public ByteArrayResource finalizeNotebook(
+            NotebookEntity notebook,
+            List<StudentEntity> students,
+            Map<String, Integer> workTypeWeights
+    ) throws IOException {
+        var finalizedNotebook = NotebookUtils.finalizeNotebook(notebook, students, workTypeWeights);
         var byteArrayResource = new ByteArrayResource(finalizedNotebook.toByteArray());
 
         notebook.setStatus(StatusEnum.OFF);

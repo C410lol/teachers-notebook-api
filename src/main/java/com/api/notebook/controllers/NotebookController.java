@@ -317,7 +317,9 @@ public class NotebookController {
         if (!notebookOptional.get().getUser().getId().equals(authenticationId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        var file = notebookService.finalizeNotebook(notebookOptional.get(), workTypeWeights);
+
+        var students = studentService.findAllStudentsByClasse(notebookOptional.get().getClasse());
+        var file = notebookService.finalizeNotebook(notebookOptional.get(), students, workTypeWeights);
         if (file != null) {
 
             var headers = new HttpHeaders();
