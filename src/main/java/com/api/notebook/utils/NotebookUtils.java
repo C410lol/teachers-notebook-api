@@ -181,14 +181,22 @@ public class NotebookUtils {
                 }
 
                 var approximateAverage = (double) Math.round((gradesSum / quantity) * 2) / 2;
-                ExcelUtils.createRowCell(studentRow, studentGradeCellCount, String.valueOf(approximateAverage));
+                ExcelUtils.createRowCell(
+                        studentRow,
+                        studentGradeCellCount,
+                        String.valueOf(approximateAverage).replace(".", ",")
+                );
                 studentGradeCellCount++;
 
                 finalGrade += (gradesSum * map.getValue()) / quantity;
             }
 
             var approximateFinalGrade = (double) Math.round((finalGrade / 10) * 2) / 2;
-            ExcelUtils.createRowCell(studentRow, workTypeCellCount, String.valueOf(approximateFinalGrade));
+            ExcelUtils.createRowCell(
+                    studentRow,
+                    workTypeCellCount,
+                    String.valueOf(approximateFinalGrade).replace(".", ",")
+            );
         }
 
         ExcelUtils.setSheetHeaderRowStyles(workbook, firstRow);
@@ -317,7 +325,10 @@ public class NotebookUtils {
                                 work.getGrades()) {
                             if (grade.getStudent().equals(student)) {
                                 ExcelUtils.createRowCell(
-                                        studentRow, studentCellCount, String.valueOf(grade.getGrade()));
+                                        studentRow,
+                                        studentCellCount,
+                                        String.valueOf(grade.getGrade()).replace(".", ",")
+                                );
                                 studentCellCount++;
                                 break;
                             }
