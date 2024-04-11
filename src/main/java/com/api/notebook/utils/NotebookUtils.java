@@ -50,7 +50,7 @@ public class NotebookUtils {
         //Creating sheet header
 
         //Setting columns settings
-        frequenciasSheet.setColumnWidth(0,(int) (6 * 1.5 * 256));
+        frequenciasSheet.setColumnWidth(0, (int) (6 * 1.5 * 256));
         frequenciasSheet.setColumnWidth(1, (int) (33 * 1.5 * 256));
         //Setting Columns settings
 
@@ -80,6 +80,13 @@ public class NotebookUtils {
         }
         //Setting lessons date in the sheet header
 
+
+        //Set column "Faltas"
+        frequenciasSheet.setColumnWidth(cellCount, (int) (6 * 1.5 * 256));
+        ExcelUtils.createRowCell(firstRow, cellCount, "Faltas");
+        //Set column "Faltas"
+
+
         var studentRowCount = 1;
         for (StudentEntity student:
                 students) {
@@ -89,6 +96,7 @@ public class NotebookUtils {
             ExcelUtils.createRowCell(studentRow, 0, String.valueOf(student.getNumber()));
             ExcelUtils.createRowCell(studentRow, 1, student.getName());
 
+            var studentAbsences = 0;
             var studentCellCount = 2;
             for (LessonEntity lesson:
                     notebook.getLessons()) {
@@ -101,10 +109,16 @@ public class NotebookUtils {
                 for (int x = 0; x < lesson.getQuantity(); x++) {
                     if (lesson.getAttendances().get(x).getPresentStudents().contains(student)) {
                         ExcelUtils.createRowCell(studentRow, studentCellCount, "C");
-                    } else ExcelUtils.createRowCell(studentRow, studentCellCount, "F");
+                    } else {
+                        ExcelUtils.createRowCell(studentRow, studentCellCount, "F");
+                        studentAbsences++;
+                    }
                     studentCellCount++;
                 }
+
             }
+
+            ExcelUtils.createRowCell(studentRow, studentCellCount, String.valueOf(studentAbsences));
         }
 
         ExcelUtils.setSheetHeaderRowStyles(workbook, firstRow);
