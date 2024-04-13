@@ -4,6 +4,8 @@ import com.api.notebook.models.entities.NotebookEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -12,7 +14,14 @@ import java.util.UUID;
 @Repository
 public interface NotebookRepository extends JpaRepository<NotebookEntity, UUID> {
 
-    Page<NotebookEntity> findByUserId(UUID userId, Pageable pageable);
+    @Query(value = "SELECT * FROM notebooks WHERE user_id = :userId " +
+            "AND bimester LIKE :bimester ", nativeQuery = true)
+    Page<NotebookEntity> findByUserId(
+            @Param(value = "userId") UUID userId,
+            @Param(value = "bimester") String bimesterFilter,
+            Pageable pageable
+    );
+
     List<NotebookEntity> findByUserId(UUID userId);
 
 }
