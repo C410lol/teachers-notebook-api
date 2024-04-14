@@ -69,12 +69,10 @@ public class UserService {
         }
 
         var token = jwtService.generateToken(userOptional.get().getEmail());
+
         return new AuthTryModel(AuthTryEnum.OK, new AuthReturnModel(
             userOptional.get().getId(), 
-            token,
-            userOptional.get().getName(),
-            userOptional.get().getEmail(),
-            userOptional.get().getRole().name()
+            token
         ));
     }
 
