@@ -84,7 +84,7 @@ public class UserController {
         return ResponseEntity.ok(userService.findAllUsers());
     }
 
-    @GetMapping("/teachers")
+    @GetMapping("/all/teachers")
     @PreAuthorize("hasRole('ROLE_ADM')")
     public ResponseEntity<Object> getAllTeachers() {
         return ResponseEntity.ok(userService.findAllUsersByRole(RoleEnum.ROLE_TCHR));
