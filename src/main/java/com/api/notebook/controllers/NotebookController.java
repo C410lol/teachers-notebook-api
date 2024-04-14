@@ -82,6 +82,9 @@ public class NotebookController {
     @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> getAllNotebooksByTeacherId(
             @PathVariable(value = "teacherId") UUID teacherId,
+
+            @RequestParam(value = "bimester", defaultValue = "%", required = false) String bimesterFilter,
+
             @RequestParam(value = "pageNum", defaultValue = "0", required = false) String pageNum,
             @RequestParam(value = "direction", defaultValue = "desc", required = false) String direction,
             @RequestParam(value = "sortBy", defaultValue = "status", required = false) String sortBy
@@ -99,7 +102,7 @@ public class NotebookController {
                 Sort.Direction.fromString(direction),
                 sortBy
         );
-        var teacherNotebooks = notebookService.findAllNotebooksByTeacherId(teacherId, pageable);
+        var teacherNotebooks = notebookService.findAllNotebooksByTeacherId(teacherId, bimesterFilter, pageable);
         if (teacherNotebooks.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
         }

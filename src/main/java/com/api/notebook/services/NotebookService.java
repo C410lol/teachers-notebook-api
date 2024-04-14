@@ -33,8 +33,10 @@ public class NotebookService {
         return notebookRepository.findAll();
     }
 
-    public Page<NotebookEntity> findAllNotebooksByTeacherId(UUID teacherId, Pageable pageable) {
-        return notebookRepository.findByUserId(teacherId, pageable);
+    public Page<NotebookEntity> findAllNotebooksByTeacherId(
+            UUID teacherId, String bimesterFilter, Pageable pageable
+    ) {
+        return notebookRepository.findByUserId(teacherId, bimesterFilter, pageable);
     }
 
     public Optional<NotebookEntity> findNotebookById(UUID id) {
