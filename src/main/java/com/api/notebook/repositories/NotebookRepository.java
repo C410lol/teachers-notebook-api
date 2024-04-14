@@ -15,7 +15,7 @@ import java.util.UUID;
 public interface NotebookRepository extends JpaRepository<NotebookEntity, UUID> {
 
     @Query(value = "SELECT * FROM notebooks WHERE user_id = :userId " +
-            "AND bimester = :bimester", nativeQuery = true)
+            "AND bimester LIKE :bimester", nativeQuery = true)
     Page<NotebookEntity> findByUserId(
             @Param(value = "userId") UUID userId,
             @Param(value = "bimester") String bimesterFilter,
