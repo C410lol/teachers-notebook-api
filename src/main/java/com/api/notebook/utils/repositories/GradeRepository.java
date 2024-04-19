@@ -1,4 +1,4 @@
-package com.api.notebook.repositories;
+package com.api.notebook.utils.repositories;
 
 import com.api.notebook.models.entities.GradeEntity;
 import org.springframework.data.jpa.repository.JpaRepository;

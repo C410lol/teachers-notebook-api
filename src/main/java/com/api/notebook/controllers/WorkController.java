@@ -33,7 +33,7 @@ public class WorkController {
     @PostMapping("/create") //POST endpoint to create a work entity
     @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> createWork(@RequestParam(value = "notebookId") UUID notebookId,
-                                               @RequestBody @Valid @NotNull WorkDto workDto) {
+                                             @RequestBody @Valid @NotNull WorkDto workDto) {
         var workEntity = new WorkEntity();
         BeanUtils.copyProperties(workDto, workEntity);
         if (workEntity.getDeliveryDate() == null) {
@@ -83,7 +83,7 @@ public class WorkController {
             var authentication = SecurityContextHolder.getContext().getAuthentication();
             if (
                     !workOptional.get().getNotebook().getUser().getId().equals(authentication.getPrincipal()) &&
-                    !authentication.getAuthorities().contains(new SimpleGrantedAuthority(RoleEnum.ROLE_ADM.name()))
+                            !authentication.getAuthorities().contains(new SimpleGrantedAuthority(RoleEnum.ROLE_ADM.name()))
             ) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
@@ -95,7 +95,7 @@ public class WorkController {
     @PutMapping("/edit/{workId}")
     @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> editWork(@PathVariable(value = "workId") UUID workId,
-                                             @RequestBody @Valid WorkDto workDto) {
+                                           @RequestBody @Valid WorkDto workDto) {
         var workOptional = workService.findWorkById(workId);
         if (workOptional.isPresent()) {
             var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();

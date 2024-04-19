@@ -1,4 +1,4 @@
-package com.api.notebook.repositories;
+package com.api.notebook.utils.repositories;
 
 import com.api.notebook.enums.VCodeEnum;
 import com.api.notebook.models.entities.VCodeEntity;
@@ -12,6 +12,7 @@ import java.util.UUID;
 public interface VCodeRepository extends JpaRepository<VCodeEntity, Long> {
 
     Optional<VCodeEntity> findByUserIdAndType(UUID teacherId, VCodeEnum type);
+
     boolean existsByUserIdAndType(UUID teacherId, VCodeEnum type);
 
 }

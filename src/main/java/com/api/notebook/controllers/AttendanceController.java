@@ -32,7 +32,7 @@ public class AttendanceController {
             @RequestBody @Valid @NotNull List<AttendanceDto> attendanceDtos
     ) {
         int currentIndex = 0;
-        for(AttendanceDto attendanceDto:
+        for (AttendanceDto attendanceDto :
                 attendanceDtos) {
             var attendanceEntity = new AttendanceEntity();
             studentService.setPresentStudentsToAttendance(attendanceDto.getPresentStudentsIds(), attendanceEntity);

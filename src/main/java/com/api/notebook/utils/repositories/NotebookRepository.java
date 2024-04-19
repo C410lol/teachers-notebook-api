@@ -1,4 +1,4 @@
-package com.api.notebook.repositories;
+package com.api.notebook.utils.repositories;
 
 import com.api.notebook.models.entities.NotebookEntity;
 import org.springframework.data.domain.Page;
@@ -20,6 +20,7 @@ public interface NotebookRepository extends JpaRepository<NotebookEntity, UUID> 
             @Param(value = "userId") UUID userId,
             @Param(value = "bimester") String bimesterFilter,
             Pageable pageable);
+
     List<NotebookEntity> findByUserId(UUID userId);
 
 }

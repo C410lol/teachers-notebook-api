@@ -1,12 +1,10 @@
 package com.api.notebook.services;
 
 import com.api.notebook.models.entities.GradeEntity;
-import com.api.notebook.repositories.GradeRepository;
+import com.api.notebook.utils.repositories.GradeRepository;
 import lombok.RequiredArgsConstructor;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;

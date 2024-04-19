@@ -8,7 +8,7 @@ import com.api.notebook.models.AuthTryModel;
 import com.api.notebook.models.entities.NotebookEntity;
 import com.api.notebook.models.entities.UserEntity;
 import com.api.notebook.models.entities.VCodeEntity;
-import com.api.notebook.repositories.UserRepository;
+import com.api.notebook.utils.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -38,7 +38,9 @@ public class UserService {
         return userRepository.findAll();
     }
 
-    public List<UserEntity> findAllUsersByRole(RoleEnum role) { return userRepository.findAllByRole(role); }
+    public List<UserEntity> findAllUsersByRole(RoleEnum role) {
+        return userRepository.findAllByRole(role);
+    }
 
     public Optional<UserEntity> findUserById(UUID id) {
         return userRepository.findById(id);
@@ -60,7 +62,7 @@ public class UserService {
     public AuthTryModel tryToAuthenticate(@NotNull AuthModel authModel, JwtService jwtService) {
         var userOptional = findUserByEmail(authModel.getEmail());
 
-        if(userOptional.isEmpty()) {
+        if (userOptional.isEmpty()) {
             return new AuthTryModel(AuthTryEnum.NOT_FOUND, null);
         }
 
@@ -71,8 +73,8 @@ public class UserService {
         var token = jwtService.generateToken(userOptional.get().getEmail());
 
         return new AuthTryModel(AuthTryEnum.OK, new AuthReturnModel(
-            userOptional.get().getId(), 
-            token
+                userOptional.get().getId(),
+                token
         ));
     }
 

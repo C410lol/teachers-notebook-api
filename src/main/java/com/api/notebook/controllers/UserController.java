@@ -3,13 +3,13 @@ package com.api.notebook.controllers;
 import com.api.notebook.enums.RoleEnum;
 import com.api.notebook.enums.VCodeEnum;
 import com.api.notebook.models.AuthModel;
-import com.api.notebook.models.EmailModel;
 import com.api.notebook.models.dtos.UserDto;
 import com.api.notebook.models.dtos.UserWithoutPasswordDto;
+import com.api.notebook.models.entities.EmailEntity;
 import com.api.notebook.models.entities.UserEntity;
 import com.api.notebook.models.entities.VCodeEntity;
-import com.api.notebook.producers.MailProducer;
 import com.api.notebook.services.JwtService;
+import com.api.notebook.services.MailService;
 import com.api.notebook.services.UserService;
 import com.api.notebook.services.VCodeService;
 import com.api.notebook.utils.CodeGenerator;
@@ -36,8 +36,7 @@ public class UserController {
     private final UserService userService;
     private final JwtService jwtService;
     private final VCodeService vCodeService;
-    private final MailProducer mailProducer;
-
+    private final MailService mailService;
 
 
     //CREATE
@@ -60,20 +59,20 @@ public class UserController {
         userService.setVCodeToUser(createdUser.getId(), verificationCodeEntity);
         vCodeService.save(verificationCodeEntity);
 
-        mailProducer.sendMailMessage(new EmailModel(
+        mailService.sendEmail(new EmailEntity(
+                null,
                 teacherEntity.getEmail(),
                 "Confirme Sua Conta No Site TeacherNotesHub!",
                 String.format("Clique neste link para confirmar sua conta ou copie e cole no seu navegador: " +
-                        "%s/verify-account/%s?vCode=%s",
-                        Constants.APP_URL, teacherEntity.getId(), code)
+                                "%s/verify-account/%s?vCode=%s",
+                        Constants.APP_URL, teacherEntity.getId(), code),
+                null
         ));
 
         return ResponseEntity.status(HttpStatus.CREATED).body("Usuário criado!");
     }
 
     //CREATE
-
-
 
 
     //READ
@@ -97,7 +96,7 @@ public class UserController {
             var authentication = SecurityContextHolder.getContext().getAuthentication();
             if (
                     !authentication.getPrincipal().equals(teacherId) &&
-                    !authentication.getAuthorities().contains(new SimpleGrantedAuthority(RoleEnum.ROLE_ADM.name()))
+                            !authentication.getAuthorities().contains(new SimpleGrantedAuthority(RoleEnum.ROLE_ADM.name()))
             ) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body("Não é possível visualizar a conta de outros usuários!");
@@ -110,13 +109,11 @@ public class UserController {
     //READ
 
 
-
-
     //EDIT
 
     @PutMapping("/{teacherId}")
     public ResponseEntity<Object> editUser(@PathVariable(value = "teacherId") UUID teacherId,
-                                              @RequestBody @Valid UserWithoutPasswordDto userWithoutPasswordDto) {
+                                           @RequestBody @Valid UserWithoutPasswordDto userWithoutPasswordDto) {
         var userOptional = userService.findUserById(teacherId);
         if (userOptional.isPresent()) {
             var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -166,12 +163,14 @@ public class UserController {
         userService.setVCodeToUser(userOptional.get().getId(), verificationCodeEntity);
         vCodeService.save(verificationCodeEntity);
 
-        mailProducer.sendMailMessage(new EmailModel(
+        mailService.sendEmail(new EmailEntity(
+                null,
                 userOptional.get().getEmail(),
                 "Requisição Para Trocar de Senha No Site TeacherNotesHub.",
                 String.format("Clique neste link para mudar sua senha ou copie e cole no seu navegador: " +
                                 "%s/change-password/%s?vCode=%s",
-                        Constants.APP_URL, userOptional.get().getId(), code)
+                        Constants.APP_URL, userOptional.get().getId(), code),
+                null
         ));
 
         return ResponseEntity.ok("Requisição para trocar de senha enviada!");
@@ -209,8 +208,6 @@ public class UserController {
     //EDIT
 
 
-
-
     //DELETE
 
     @PostMapping("/{teacherId}/delete-request")
@@ -225,9 +222,9 @@ public class UserController {
 
         if (vCodeService.existsByUserIdAndType(
                 teacherId, VCodeEnum.ACCOUNT_DELETE)) {
-             var codeId = vCodeService.findByUserIdAndType(
-                     teacherId, VCodeEnum.ACCOUNT_DELETE).get().getId();
-             vCodeService.deleteById(codeId);
+            var codeId = vCodeService.findByUserIdAndType(
+                    teacherId, VCodeEnum.ACCOUNT_DELETE).get().getId();
+            vCodeService.deleteById(codeId);
         }
 
         var code = CodeGenerator.generateCode();
@@ -237,12 +234,14 @@ public class UserController {
         userService.setVCodeToUser(teacherId, verificationCodeEntity);
         vCodeService.save(verificationCodeEntity);
 
-        mailProducer.sendMailMessage(new EmailModel(
+        mailService.sendEmail(new EmailEntity(
+                null,
                 userOptional.get().getEmail(),
                 "Requisição Para Deletar Sua Conta",
                 "Para confirmar a deleção de sua conta clique neste link ou copie e cole em seu navegador:" +
                         String.format("%s/delete-confirm/%s?vCode=%s",
-                                Constants.APP_URL, teacherId, code)
+                                Constants.APP_URL, teacherId, code),
+                null
         ));
 
         return ResponseEntity.ok("Requisição para deletar sua conta enviada!");
@@ -284,8 +283,6 @@ public class UserController {
     }
 
     //DELETE
-
-
 
 
     //VERIFICATIONS
@@ -346,12 +343,14 @@ public class UserController {
                     .body("Código de verificação não registrado para essa conta!");
         }
 
-        mailProducer.sendMailMessage(new EmailModel(
+        mailService.sendEmail(new EmailEntity(
+                null,
                 userOptional.get().getEmail(),
                 "Confirme Sua Conta No Site TeacherNotesHub!",
                 String.format("Clique neste link para confirmar sua conta ou copie e cole no seu navegador: " +
                                 "%s/verify-account/%s?vCode=%s",
-                        Constants.APP_URL, teacherId, verificationCodeOptional.get().getCode())
+                        Constants.APP_URL, teacherId, verificationCodeOptional.get().getCode()),
+                null
         ));
 
         return ResponseEntity.ok("Email de verificação reenviado!");
@@ -372,8 +371,6 @@ public class UserController {
     }
 
     //VERIFICATIONS
-
-
 
 
     //AUTHENTICATION
@@ -399,8 +396,6 @@ public class UserController {
     }
 
     //AUTHENTICATION
-
-
 
 
 }

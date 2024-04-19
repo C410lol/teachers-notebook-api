@@ -3,11 +3,10 @@ package com.api.notebook.controllers;
 import com.api.notebook.enums.RoleEnum;
 import com.api.notebook.enums.StatusEnum;
 import com.api.notebook.enums.VCodeEnum;
-import com.api.notebook.models.EmailModel;
 import com.api.notebook.models.dtos.NotebookDto;
+import com.api.notebook.models.entities.EmailEntity;
 import com.api.notebook.models.entities.NotebookEntity;
 import com.api.notebook.models.entities.VCodeEntity;
-import com.api.notebook.producers.MailProducer;
 import com.api.notebook.services.*;
 import com.api.notebook.utils.CodeGenerator;
 import com.api.notebook.utils.Constants;
@@ -41,8 +40,7 @@ public class NotebookController {
     private final UserService userService;
     private final StudentService studentService;
     private final VCodeService vCodeService;
-    private final MailProducer mailProducer;
-
+    private final MailService mailService;
 
 
     //CREATE
@@ -50,7 +48,7 @@ public class NotebookController {
     @PostMapping("/create") //POST endpoint to create a notebook entity
     @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> createNotebook(@RequestParam(value = "teacherId") UUID teacherId,
-                                              @RequestBody @Valid @NotNull NotebookDto notebookDto) {
+                                                 @RequestBody @Valid @NotNull NotebookDto notebookDto) {
         var notebookEntity = new NotebookEntity();
         BeanUtils.copyProperties(notebookDto, notebookEntity);
         notebookEntity.setStatus(StatusEnum.ON);
@@ -62,8 +60,6 @@ public class NotebookController {
     }
 
     //CREATE
-
-
 
 
     //READ
@@ -92,7 +88,7 @@ public class NotebookController {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
         if (
                 !authentication.getPrincipal().equals(teacherId) &&
-                !authentication.getAuthorities().contains(new SimpleGrantedAuthority(RoleEnum.ROLE_ADM.name()))
+                        !authentication.getAuthorities().contains(new SimpleGrantedAuthority(RoleEnum.ROLE_ADM.name()))
         ) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
@@ -117,7 +113,7 @@ public class NotebookController {
             var authentication = SecurityContextHolder.getContext().getAuthentication();
             if (
                     !notebook.get().getUser().getId().equals(authentication.getPrincipal()) &&
-                    !authentication.getAuthorities().contains(new SimpleGrantedAuthority(RoleEnum.ROLE_ADM.name()))
+                            !authentication.getAuthorities().contains(new SimpleGrantedAuthority(RoleEnum.ROLE_ADM.name()))
             ) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
@@ -129,14 +125,12 @@ public class NotebookController {
     //READ
 
 
-
-
     //EDIT
 
     @PutMapping("/edit/{notebookId}")
     @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<?> editNotebook(@PathVariable(value = "notebookId") UUID notebookId,
-                                               @RequestBody @Valid NotebookDto notebookDto) {
+                                          @RequestBody @Valid NotebookDto notebookDto) {
         var notebookOptional = notebookService.findNotebookById(notebookId);
         if (notebookOptional.isPresent()) {
             var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -157,7 +151,7 @@ public class NotebookController {
     @PreAuthorize("hasAnyRole('ROLE_ADM')")
     public void refreshAllNotebooks() {
         var allNotebooks = notebookService.findAllNotebooks();
-        for (NotebookEntity notebook:
+        for (NotebookEntity notebook :
                 allNotebooks) {
             studentService.setStudentsToNotebookByClass(notebook.getClasse(), notebook);
             notebookService.saveNotebook(notebook);
@@ -165,8 +159,6 @@ public class NotebookController {
     }
 
     //EDIT
-
-
 
 
     //DELETE
@@ -201,11 +193,12 @@ public class NotebookController {
         userService.setVCodeToUser(userId, vCodeEntity);
         vCodeService.save(vCodeEntity);
 
-        mailProducer.sendMailMessage(new EmailModel(
+        mailService.sendEmail(new EmailEntity(
+                null,
                 userOptional.get().getEmail(),
                 "Requisição Para Deletar Caderneta",
                 String.format("Para confirmar a deleção da caderneta " +
-                        "da sala: {%s}, matéria: {%s} e bimestre: {%s}," +
+                                "da sala: {%s}, matéria: {%s} e bimestre: {%s}," +
                                 " clique neste link ou copie e cole em seu navegador:" +
                                 "%s/cadernetas?deleteNotebookId=%s&deleteNotebookVCode=%s",
                         notebookOptional.get().getClasse(),
@@ -214,7 +207,8 @@ public class NotebookController {
                         Constants.APP_URL,
                         notebookOptional.get().getId(),
                         code
-                        )
+                ),
+                null
         ));
 
         return ResponseEntity.ok("Requisição para deletar a caderneta enviada com sucesso!");
@@ -260,8 +254,6 @@ public class NotebookController {
     //DELETE
 
 
-
-
     //VERIFICATIONS
 
     @GetMapping("/{teacherId}/all-missing-tasks")
@@ -303,8 +295,6 @@ public class NotebookController {
     //VERIFICATIONS
 
 
-
-
     //FINALIZATION
 
     @PutMapping("/finalize/{notebookId}")
@@ -337,8 +327,6 @@ public class NotebookController {
     }
 
     //FINALIZATION
-
-
 
 
 }

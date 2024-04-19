@@ -1,12 +1,14 @@
 package com.api.notebook.services;
 
 import com.api.notebook.enums.StatusEnum;
-import com.api.notebook.models.MissingTaskLessonModel;
-import com.api.notebook.models.MissingTaskWorkModel;
+import com.api.notebook.models.MissingTaskModel;
 import com.api.notebook.models.MissingTasksModel;
-import com.api.notebook.models.entities.*;
-import com.api.notebook.repositories.NotebookRepository;
+import com.api.notebook.models.entities.LessonEntity;
+import com.api.notebook.models.entities.NotebookEntity;
+import com.api.notebook.models.entities.StudentEntity;
+import com.api.notebook.models.entities.WorkEntity;
 import com.api.notebook.utils.NotebookUtils;
+import com.api.notebook.utils.repositories.NotebookRepository;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.core.io.ByteArrayResource;
@@ -59,10 +61,10 @@ public class NotebookService {
 
     public MissingTasksModel verifyAllMissingTasks(UUID teacherId) {
         var notebooks = notebookRepository.findByUserId(teacherId);
-        List<MissingTaskLessonModel> allMissingLessons = new ArrayList<>();
-        List<MissingTaskWorkModel> allMissingWorks = new ArrayList<>();
+        List<MissingTaskModel> allMissingLessons = new ArrayList<>();
+        List<MissingTaskModel> allMissingWorks = new ArrayList<>();
 
-        for (NotebookEntity notebook:
+        for (NotebookEntity notebook :
                 notebooks) {
             var missingTasks = verifyMissingTasksByNotebook(notebook);
             allMissingLessons.addAll(missingTasks.getMissingLessons());
@@ -73,22 +75,22 @@ public class NotebookService {
     }
 
     public MissingTasksModel verifyMissingTasksByNotebook(@NotNull NotebookEntity notebook) {
-        List<MissingTaskLessonModel> missingLessons = new ArrayList<>();
-        List<MissingTaskWorkModel> missingWorks = new ArrayList<>();
-        for (LessonEntity lesson:
+        List<MissingTaskModel> missingLessons = new ArrayList<>();
+        List<MissingTaskModel> missingWorks = new ArrayList<>();
+        for (LessonEntity lesson :
                 notebook.getLessons()) {
             if (lesson.getAttendances().isEmpty()) {
-                missingLessons.add(new MissingTaskLessonModel(
+                missingLessons.add(new MissingTaskModel(
                         lesson.getId(),
                         lesson.getTitle(),
                         notebook.getId()
                 ));
             }
         }
-        for (WorkEntity work:
+        for (WorkEntity work :
                 notebook.getWorks()) {
             if (work.getGrades().size() < notebook.getStudents().size()) {
-                missingWorks.add(new MissingTaskWorkModel(
+                missingWorks.add(new MissingTaskModel(
                         work.getId(),
                         work.getTitle(),
                         notebook.getId()

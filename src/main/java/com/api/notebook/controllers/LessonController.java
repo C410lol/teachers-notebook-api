@@ -97,7 +97,7 @@ public class LessonController {
             var authentication = SecurityContextHolder.getContext().getAuthentication();
             if (
                     !lessonOptional.get().getNotebook().getUser().getId().equals(authentication.getPrincipal()) &&
-                    !authentication.getAuthorities().contains(new SimpleGrantedAuthority(RoleEnum.ROLE_ADM.name()))
+                            !authentication.getAuthorities().contains(new SimpleGrantedAuthority(RoleEnum.ROLE_ADM.name()))
             ) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
