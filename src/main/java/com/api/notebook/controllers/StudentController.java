@@ -49,8 +49,9 @@ public class StudentController {
 
         allStudents.add(studentEntity);
         allStudentsByClasse.forEach((element) -> {
-            if (element.getIsOrder()) { allStudents.add(element); }
-            else notOrderStudents.add(element);
+            if (element.getIsOrder()) {
+                allStudents.add(element);
+            } else notOrderStudents.add(element);
         });
         allStudents.sort(new StudentComparator());
         allStudents.addAll(notOrderStudents);
@@ -88,8 +89,6 @@ public class StudentController {
         }
         return ResponseEntity.ok(studentService.findAllStudentsByClasse(optionalNotebook.get().getClasse()));
     }
-
-
 
 
     //DELETE

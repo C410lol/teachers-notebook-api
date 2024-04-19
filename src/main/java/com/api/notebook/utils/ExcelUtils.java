@@ -1,27 +1,12 @@
 package com.api.notebook.utils;
 
-import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.jetbrains.annotations.NotNull;
 
 public class ExcelUtils {
-
-    public static void createRowCell(@NotNull Row row, int index, String value, CellStyle cellStyle) {
-        var cell = row.createCell(index);
-        cell.setCellValue(value);
-        cell.setCellStyle(cellStyle);
-    }
-
-    public static void createRowCell(@NotNull Row row, int index, Integer value, CellStyle cellStyle) {
-        var cell = row.createCell(index);
-        cell.setCellValue(value);
-        cell.setCellStyle(cellStyle);
-    }
-
-    public static void createRowCell(@NotNull Row row, int index, Double value, CellStyle cellStyle) {
-        var cell = row.createCell(index);
-        cell.setCellValue(value);
-        cell.setCellStyle(cellStyle);
-    }
 
     public static void createRowCell(@NotNull Row row, int index, String value) {
         var cell = row.createCell(index);
@@ -51,7 +36,7 @@ public class ExcelUtils {
             if (sheet.getRow(x) == null) continue;
 
             for (int y = 0; y < sheet.getRow(x).getLastCellNum(); y++) {
-                if(sheet.getRow(x).getCell(y) == null) continue;
+                if (sheet.getRow(x).getCell(y) == null) continue;
 
                 sheet.getRow(x).getCell(y).setCellStyle(style);
             }

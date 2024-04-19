@@ -44,7 +44,9 @@ public class UserEntity {
     @OneToMany(mappedBy = "user", cascade = {CascadeType.ALL})
     private List<NotebookEntity> notebooks;
 
-    public boolean isVerified() { return verified; }
+    public boolean isVerified() {
+        return verified;
+    }
 
     @JsonGetter(value = "notebooks")
     public Integer getNotebooksQuantity() {

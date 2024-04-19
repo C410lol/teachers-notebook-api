@@ -2,7 +2,7 @@ package com.api.notebook.services;
 
 import com.api.notebook.models.entities.GradeEntity;
 import com.api.notebook.models.entities.WorkEntity;
-import com.api.notebook.repositories.WorkRepository;
+import com.api.notebook.utils.repositories.WorkRepository;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Page;
@@ -44,8 +44,8 @@ public class WorkService {
 
     public void setGradeToWork(UUID workId, @NotNull GradeEntity grade) { //Set grade to a work
         var workOptional = findWorkById(workId);
-        if(workOptional.isPresent()) {
-            for (GradeEntity gradeLoop:
+        if (workOptional.isPresent()) {
+            for (GradeEntity gradeLoop :
                     workOptional.get().getGrades()) {
                 if (gradeLoop.getStudent().equals(grade.getStudent())) {
                     grade.setId(gradeLoop.getId());

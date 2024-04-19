@@ -1,12 +1,10 @@
 package com.api.notebook.services;
 
 import com.api.notebook.models.entities.AttendanceEntity;
-import com.api.notebook.repositories.AttendanceRepository;
+import com.api.notebook.utils.repositories.AttendanceRepository;
 import lombok.RequiredArgsConstructor;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;

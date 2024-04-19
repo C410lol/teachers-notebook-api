@@ -1,4 +1,4 @@
-package com.api.notebook.repositories;
+package com.api.notebook.utils.repositories;
 
 import com.api.notebook.enums.RoleEnum;
 import com.api.notebook.models.entities.UserEntity;
@@ -13,7 +13,9 @@ import java.util.UUID;
 public interface UserRepository extends JpaRepository<UserEntity, UUID> {
 
     Optional<UserEntity> findByEmail(String email);
+
     boolean existsByEmail(String email);
+
     List<UserEntity> findAllByRole(RoleEnum role);
 
 }

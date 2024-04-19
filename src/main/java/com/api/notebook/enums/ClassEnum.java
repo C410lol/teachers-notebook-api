@@ -12,5 +12,5 @@ public enum ClassEnum {
     Ensino_Médio_1_A,
     Ensino_Médio_2_A,
     Ensino_Médio_3_A
-    
+
 }

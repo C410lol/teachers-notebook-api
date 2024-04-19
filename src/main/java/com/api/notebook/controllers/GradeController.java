@@ -1,8 +1,6 @@
 package com.api.notebook.controllers;
 
-import com.api.notebook.models.dtos.AttendanceDto;
 import com.api.notebook.models.dtos.GradeDto;
-import com.api.notebook.models.entities.AttendanceEntity;
 import com.api.notebook.models.entities.GradeEntity;
 import com.api.notebook.services.GradeService;
 import com.api.notebook.services.StudentService;
@@ -30,7 +28,7 @@ public class GradeController {
     @PostMapping("/create") //POST endpoint to create a grade entity
     @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> createGrade(@RequestParam(value = "workId") UUID workId,
-                                                   @RequestBody @Valid @NotNull GradeDto gradeDto) {
+                                              @RequestBody @Valid @NotNull GradeDto gradeDto) {
         var gradeEntity = new GradeEntity();
         BeanUtils.copyProperties(gradeDto, gradeEntity);
         studentService.setStudentToGrade(gradeDto.getStudentId(), gradeEntity);

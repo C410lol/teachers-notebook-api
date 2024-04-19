@@ -5,8 +5,8 @@ import com.api.notebook.models.entities.AttendanceEntity;
 import com.api.notebook.models.entities.GradeEntity;
 import com.api.notebook.models.entities.NotebookEntity;
 import com.api.notebook.models.entities.StudentEntity;
-import com.api.notebook.repositories.StudentRepository;
 import com.api.notebook.utils.StudentComparator;
+import com.api.notebook.utils.repositories.StudentRepository;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
@@ -51,7 +51,7 @@ public class StudentService {
     //Set present students to an attendance
     public void setPresentStudentsToAttendance(@NotNull List<UUID> presentStudentsIds, AttendanceEntity attendance) {
         List<StudentEntity> presentStudents = new ArrayList<>();
-        for (UUID studentId:
+        for (UUID studentId :
                 presentStudentsIds) {
             var studentOptional = findStudentById(studentId);
             if (studentOptional.isPresent()) {
@@ -64,7 +64,7 @@ public class StudentService {
     //Set absent students to an attendance
     public void setAbsentStudentsToAttendance(@NotNull List<UUID> absentStudentsIds, AttendanceEntity attendance) {
         List<StudentEntity> absentStudents = new ArrayList<>();
-        for (UUID studentId:
+        for (UUID studentId :
                 absentStudentsIds) {
             var studentOptional = findStudentById(studentId);
             if (studentOptional.isPresent()) {

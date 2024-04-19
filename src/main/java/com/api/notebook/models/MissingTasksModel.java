@@ -11,8 +11,8 @@ import java.util.List;
 @NoArgsConstructor
 public class MissingTasksModel {
 
-    private List<MissingTaskLessonModel> missingLessons;
-    private List<MissingTaskWorkModel> missingWorks;
+    private List<MissingTaskModel> missingLessons;
+    private List<MissingTaskModel> missingWorks;
 
     public boolean isEmpty() {
         return missingLessons.isEmpty() && missingWorks.isEmpty();

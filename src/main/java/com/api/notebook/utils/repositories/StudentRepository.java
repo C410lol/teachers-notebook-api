@@ -1,4 +1,4 @@
-package com.api.notebook.repositories;
+package com.api.notebook.utils.repositories;
 
 import com.api.notebook.enums.ClassEnum;
 import com.api.notebook.models.entities.StudentEntity;

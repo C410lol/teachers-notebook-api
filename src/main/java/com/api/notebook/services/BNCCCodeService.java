@@ -4,7 +4,7 @@ import com.api.notebook.enums.ClassEnum;
 import com.api.notebook.enums.SubjectEnum;
 import com.api.notebook.models.entities.BNCCCodeEntity;
 import com.api.notebook.models.entities.LessonEntity;
-import com.api.notebook.repositories.BNCCCodeRepository;
+import com.api.notebook.utils.repositories.BNCCCodeRepository;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
@@ -35,7 +35,7 @@ public class BNCCCodeService {
 
     public boolean setBnccCodesToLesson(@NotNull List<String> bnccCodes, LessonEntity lessonEntity) {
         List<BNCCCodeEntity> bnccCodeEntities = new ArrayList<>();
-        for (String s:
+        for (String s :
                 bnccCodes) {
             var bnccCodeOptional = bnccCodeRepository.findByCode(s);
             if (bnccCodeOptional.isEmpty()) return false;

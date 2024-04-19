@@ -9,7 +9,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Data
 @NoArgsConstructor
-public class MissingTaskWorkModel {
+public class MissingTaskModel {
 
     private UUID id;
     private String title;
