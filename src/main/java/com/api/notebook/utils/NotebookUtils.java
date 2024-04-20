@@ -17,7 +17,7 @@ public class NotebookUtils {
     public static @NotNull ByteArrayOutputStream finalizeNotebook(
             @NotNull NotebookEntity notebook,
             @NotNull List<StudentEntity> students,
-            Map<String, Integer> workTypeWeights
+            Map<String, Double> workTypeWeights
     ) throws IOException {
         var byteArrayOutputStream = new ByteArrayOutputStream();
         var notebookWorkbook = new XSSFWorkbook();
@@ -60,10 +60,10 @@ public class NotebookUtils {
 
         //Setting lessons date in the sheet header
         var cellCount = 2;
-        for (LessonEntity lesson :
+        for(LessonEntity lesson:
                 notebook.getLessons()) {
 
-            if (lesson.getQuantity() > 1) {
+            if(lesson.getQuantity() > 1) {
                 frequenciasSheet.setColumnWidth(cellCount, (int) ((10 * 1.5 * 256) / 2));
                 frequenciasSheet.setColumnWidth(cellCount + 1, (int) ((10 * 1.5 * 256) / 2));
 
@@ -88,7 +88,7 @@ public class NotebookUtils {
 
 
         var studentRowCount = 1;
-        for (StudentEntity student :
+        for (StudentEntity student:
                 students) {
             var studentRow = frequenciasSheet.createRow(studentRowCount);
             studentRowCount++;
@@ -98,7 +98,7 @@ public class NotebookUtils {
 
             var studentAbsences = 0;
             var studentCellCount = 2;
-            for (LessonEntity lesson :
+            for (LessonEntity lesson:
                     notebook.getLessons()) {
                 if (lesson.getAttendances().isEmpty()) {
                     if (lesson.getQuantity() == 2) studentCellCount += 2;
@@ -129,7 +129,7 @@ public class NotebookUtils {
             @NotNull XSSFWorkbook workbook,
             NotebookEntity notebook,
             List<StudentEntity> students,
-            @NotNull Map<String, Integer> workTypeWeights
+            @NotNull Map<String, Double> workTypeWeights
     ) {
         var mediasSheet = workbook.createSheet("Médias");
 
@@ -140,13 +140,13 @@ public class NotebookUtils {
         //Creating sheet header
 
         //Setting columns settings
-        mediasSheet.setColumnWidth(0, (int) (6 * 1.5 * 256));
+        mediasSheet.setColumnWidth(0,(int) (6 * 1.5 * 256));
         mediasSheet.setColumnWidth(1, (int) (33 * 1.5 * 256));
         //Setting Columns settings
 
         //Setting work types in sheet header
         var workTypeCellCount = 2;
-        for (Map.Entry<String, Integer> map :
+        for (Map.Entry<String, Double> map:
                 workTypeWeights.entrySet()) {
             if (map.getValue() <= 0) continue;
 
@@ -163,7 +163,7 @@ public class NotebookUtils {
         //Setting 'media' column width
 
         var studentRowCount = 1;
-        for (StudentEntity student :
+        for (StudentEntity student:
                 students) {
             var studentRow = mediasSheet.createRow(studentRowCount);
             studentRowCount++;
@@ -174,16 +174,16 @@ public class NotebookUtils {
             var finalGrade = 0.0;
 
             var studentGradeCellCount = 2;
-            for (Map.Entry<String, Integer> map :
+            for (Map.Entry<String, Double> map:
                     workTypeWeights.entrySet()) {
                 if (map.getValue() <= 0) continue;
                 var gradesSum = 0.0;
                 var quantity = 0;
 
-                for (WorkEntity work :
+                for (WorkEntity work:
                         notebook.getWorks()) {
-                    if (work.getType().toString().equals(map.getKey())) {
-                        for (GradeEntity grade :
+                    if(work.getType().toString().equals(map.getKey())) {
+                        for (GradeEntity grade:
                                 work.getGrades()) {
                             if (grade.getStudent().equals(student)) {
                                 gradesSum += grade.getGrade();
@@ -230,12 +230,12 @@ public class NotebookUtils {
         //Creating sheet header
 
         //Setting columns settings
-        observacoesSheet.setColumnWidth(0, (int) (10 * 1.5 * 256));
+        observacoesSheet.setColumnWidth(0,(int) (10 * 1.5 * 256));
         observacoesSheet.setColumnWidth(1, (int) (100 * 1.5 * 256));
         //Setting Columns settings
 
         var lessonRowCount = 1;
-        for (LessonEntity lesson :
+        for (LessonEntity lesson:
                 notebook.getLessons()) {
             if (lesson.getObservations().isEmpty() && lesson.getObservations().isBlank()) continue;
             var lessonRow = observacoesSheet.createRow(lessonRowCount);
@@ -255,7 +255,7 @@ public class NotebookUtils {
             @NotNull XSSFWorkbook workbook,
             NotebookEntity notebook,
             List<StudentEntity> students,
-            @NotNull Map<String, Integer> workTypeWeights
+            @NotNull Map<String, Double> workTypeWeights
     ) {
         var ferramentasSheet = workbook.createSheet("Ferramentas De Avaliação");
 
@@ -271,16 +271,16 @@ public class NotebookUtils {
         //Create second row of header
 
         //Setting columns settings
-        ferramentasSheet.setColumnWidth(0, (int) (6 * 1.5 * 256));
+        ferramentasSheet.setColumnWidth(0,(int) (6 * 1.5 * 256));
         ferramentasSheet.setColumnWidth(1, (int) (33 * 1.5 * 256));
         //Setting Columns settings
 
-        for (Map.Entry<String, Integer> map :
+        for (Map.Entry<String, Double> map:
                 workTypeWeights.entrySet()) {
             if (map.getValue() <= 0) continue;
 
             var worksCount = -1;
-            for (WorkEntity work :
+            for (WorkEntity work:
                     notebook.getWorks()) {
                 if (work.getType().toString().equals(map.getKey())) {
 
@@ -314,7 +314,7 @@ public class NotebookUtils {
         //Create sheet header
 
         var studentRowCount = 2;
-        for (StudentEntity student :
+        for (StudentEntity student:
                 students) {
 
             //Create student row
@@ -328,14 +328,14 @@ public class NotebookUtils {
             //Create student's firsts cells
 
             var studentCellCount = 2;
-            for (Map.Entry<String, Integer> map :
+            for (Map.Entry<String, Double> map:
                     workTypeWeights.entrySet()) {
                 if (map.getValue() <= 0) continue;
-                for (WorkEntity work :
+                for (WorkEntity work:
                         notebook.getWorks()) {
                     if (work.getType().toString().equals(map.getKey())) {
 
-                        for (GradeEntity grade :
+                        for(GradeEntity grade:
                                 work.getGrades()) {
                             if (grade.getStudent().equals(student)) {
                                 ExcelUtils.createRowCell(

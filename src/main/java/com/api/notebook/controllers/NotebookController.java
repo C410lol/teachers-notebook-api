@@ -281,8 +281,11 @@ public class NotebookController {
         if (notebookOptional.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
-        var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (!notebookOptional.get().getUser().getId().equals(authenticationId)) {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (
+                !notebookOptional.get().getUser().getId().equals(authentication.getPrincipal()) &&
+                        !authentication.getAuthorities().contains(new SimpleGrantedAuthority(RoleEnum.ROLE_ADM.name()))
+        ) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         var missingTasks = notebookService.verifyMissingTasksByNotebook(notebookOptional.get());
@@ -301,13 +304,16 @@ public class NotebookController {
     @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> finalizeNotebook(
             @PathVariable(value = "notebookId") UUID notebookId,
-            @RequestBody Map<String, Integer> workTypeWeights) throws IOException {
+            @RequestBody Map<String, Double> workTypeWeights) throws IOException {
         var notebookOptional = notebookService.findNotebookById(notebookId);
         if (notebookOptional.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
-        var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (!notebookOptional.get().getUser().getId().equals(authenticationId)) {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (
+                !notebookOptional.get().getUser().getId().equals(authentication.getPrincipal()) &&
+                        !authentication.getAuthorities().contains(new SimpleGrantedAuthority(RoleEnum.ROLE_ADM.name()))
+        ) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 

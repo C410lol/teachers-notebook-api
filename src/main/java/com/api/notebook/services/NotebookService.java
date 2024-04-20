@@ -104,7 +104,7 @@ public class NotebookService {
     public ByteArrayResource finalizeNotebook(
             NotebookEntity notebook,
             List<StudentEntity> students,
-            Map<String, Integer> workTypeWeights
+            Map<String, Double> workTypeWeights
     ) throws IOException {
         var finalizedNotebook = NotebookUtils.finalizeNotebook(notebook, students, workTypeWeights);
         var byteArrayResource = new ByteArrayResource(finalizedNotebook.toByteArray());
