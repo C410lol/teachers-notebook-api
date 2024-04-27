@@ -10,6 +10,7 @@ import com.api.notebook.models.entities.VCodeEntity;
 import com.api.notebook.services.*;
 import com.api.notebook.utils.CodeGenerator;
 import com.api.notebook.utils.Constants;
+import com.api.notebook.utils.NotebookUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
@@ -94,7 +95,7 @@ public class NotebookController {
         }
         var pageable = PageRequest.of(
                 Integer.parseInt(pageNum),
-                10,
+                20,
                 Sort.Direction.fromString(direction),
                 sortBy
         );
@@ -120,6 +121,23 @@ public class NotebookController {
             return ResponseEntity.ok(notebook.get());
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Caderneta não encontrada!");
+    }
+
+
+    @GetMapping("/{notebookId}/students-performance")
+    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
+    public ResponseEntity<Object> getStudentsPerformanceByNotebookId(
+            @PathVariable(value = "notebookId") UUID notebookId
+    ) {
+        var notebookOptional = notebookService.findNotebookById(notebookId);
+        if (notebookOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Caderneta não encontrada!");
+        }
+
+        var students = studentService.findAllStudentsByClasse(notebookOptional.get().getClasse());
+        var studentsPerformance = NotebookUtils.getAllStudentsPerformanceInLessons(notebookOptional.get(), students);
+
+        return ResponseEntity.ok(studentsPerformance);
     }
 
     //READ

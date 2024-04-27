@@ -2,7 +2,7 @@ package com.api.notebook.services;
 
 import com.api.notebook.models.entities.GradeEntity;
 import com.api.notebook.models.entities.WorkEntity;
-import com.api.notebook.utils.repositories.WorkRepository;
+import com.api.notebook.repositories.WorkRepository;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Page;

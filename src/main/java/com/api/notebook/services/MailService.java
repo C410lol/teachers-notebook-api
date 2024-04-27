@@ -2,7 +2,7 @@ package com.api.notebook.services;
 
 import com.api.notebook.enums.EmailStatus;
 import com.api.notebook.models.entities.EmailEntity;
-import com.api.notebook.utils.repositories.MailRepository;
+import com.api.notebook.repositories.MailRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;

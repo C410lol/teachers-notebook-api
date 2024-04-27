@@ -7,8 +7,8 @@ import com.api.notebook.models.entities.LessonEntity;
 import com.api.notebook.models.entities.NotebookEntity;
 import com.api.notebook.models.entities.StudentEntity;
 import com.api.notebook.models.entities.WorkEntity;
-import com.api.notebook.utils.NotebookUtils;
-import com.api.notebook.utils.repositories.NotebookRepository;
+import com.api.notebook.utils.NotebookUtilsFinalize;
+import com.api.notebook.repositories.NotebookRepository;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.core.io.ByteArrayResource;
@@ -106,7 +106,7 @@ public class NotebookService {
             List<StudentEntity> students,
             Map<String, Double> workTypeWeights
     ) throws IOException {
-        var finalizedNotebook = NotebookUtils.finalizeNotebook(notebook, students, workTypeWeights);
+        var finalizedNotebook = NotebookUtilsFinalize.finalizeNotebook(notebook, students, workTypeWeights);
         var byteArrayResource = new ByteArrayResource(finalizedNotebook.toByteArray());
 
         notebook.setStatus(StatusEnum.OFF);

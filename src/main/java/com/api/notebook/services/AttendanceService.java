@@ -1,7 +1,7 @@
 package com.api.notebook.services;
 
 import com.api.notebook.models.entities.AttendanceEntity;
-import com.api.notebook.utils.repositories.AttendanceRepository;
+import com.api.notebook.repositories.AttendanceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

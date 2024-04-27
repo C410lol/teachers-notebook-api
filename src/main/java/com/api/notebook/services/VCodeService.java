@@ -2,7 +2,7 @@ package com.api.notebook.services;
 
 import com.api.notebook.enums.VCodeEnum;
 import com.api.notebook.models.entities.VCodeEntity;
-import com.api.notebook.utils.repositories.VCodeRepository;
+import com.api.notebook.repositories.VCodeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
