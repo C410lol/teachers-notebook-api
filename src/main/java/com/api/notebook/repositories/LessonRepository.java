@@ -1,4 +1,4 @@
-package com.api.notebook.utils.repositories;
+package com.api.notebook.repositories;
 
 import com.api.notebook.models.entities.LessonEntity;
 import org.springframework.data.domain.Page;

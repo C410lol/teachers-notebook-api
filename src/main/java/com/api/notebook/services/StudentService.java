@@ -6,7 +6,7 @@ import com.api.notebook.models.entities.GradeEntity;
 import com.api.notebook.models.entities.NotebookEntity;
 import com.api.notebook.models.entities.StudentEntity;
 import com.api.notebook.utils.StudentComparator;
-import com.api.notebook.utils.repositories.StudentRepository;
+import com.api.notebook.repositories.StudentRepository;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;

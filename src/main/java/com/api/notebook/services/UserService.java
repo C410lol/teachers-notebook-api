@@ -8,7 +8,7 @@ import com.api.notebook.models.AuthTryModel;
 import com.api.notebook.models.entities.NotebookEntity;
 import com.api.notebook.models.entities.UserEntity;
 import com.api.notebook.models.entities.VCodeEntity;
-import com.api.notebook.utils.repositories.UserRepository;
+import com.api.notebook.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.security.crypto.password.PasswordEncoder;

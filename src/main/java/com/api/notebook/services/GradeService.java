@@ -1,7 +1,7 @@
 package com.api.notebook.services;
 
 import com.api.notebook.models.entities.GradeEntity;
-import com.api.notebook.utils.repositories.GradeRepository;
+import com.api.notebook.repositories.GradeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
