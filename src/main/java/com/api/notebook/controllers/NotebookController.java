@@ -95,7 +95,7 @@ public class NotebookController {
         }
         var pageable = PageRequest.of(
                 Integer.parseInt(pageNum),
-                10,
+                20,
                 Sort.Direction.fromString(direction),
                 sortBy
         );
