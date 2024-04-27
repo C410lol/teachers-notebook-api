@@ -31,16 +31,18 @@ public class NotebookUtils {
             @NotNull NotebookEntity notebook,
             StudentEntity student
     ) {
-        var totalLessons = notebook.getLessons().size();
+        var totalLessons = 0;
         var absences = 0;
         var absencesPercentage = 0.0;
         var absencesStatus = PerformanceStatus.EXCELENTE;
 
         for (LessonEntity lesson:
                 notebook.getLessons()) {
-            for (AttendanceEntity attendance:
-                    lesson.getAttendances()) {
-                if (attendance.getAbsentStudents().contains(student)) {
+            totalLessons += lesson.getQuantity();
+
+            if (lesson.getAttendances().isEmpty()) continue;
+            for (int x = 0; x < lesson.getQuantity(); x++) {
+                if (lesson.getAttendances().get(x).getAbsentStudents().contains(student)) {
                     absences++;
                 }
             }
@@ -59,6 +61,7 @@ public class NotebookUtils {
 
         return new StudentPerformanceModel(
                 student,
+                totalLessons,
                 absences,
                 Math.round(100 - absencesPercentage) + "%",
                 absencesStatus

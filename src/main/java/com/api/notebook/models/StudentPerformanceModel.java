@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 public class StudentPerformanceModel {
 
     private StudentEntity student;
+    private Integer totalLessons;
     private Integer absences;
     private String absencesPercentage;
     private PerformanceStatus absencesStatus;
