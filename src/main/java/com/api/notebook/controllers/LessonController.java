@@ -2,6 +2,7 @@ package com.api.notebook.controllers;
 
 import com.api.notebook.enums.RoleEnum;
 import com.api.notebook.models.dtos.LessonDto;
+import com.api.notebook.models.entities.BNCCCodeEntity;
 import com.api.notebook.models.entities.LessonEntity;
 import com.api.notebook.services.BNCCCodeService;
 import com.api.notebook.services.LessonService;
@@ -21,6 +22,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -57,6 +60,38 @@ public class LessonController {
         lessonService.saveLesson(lessonEntity);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
+
+
+    @PostMapping("/{lessonId}/duplicate")
+    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
+    public ResponseEntity<Object> duplicateLesson(
+            @PathVariable(value = "lessonId") UUID lessonId
+    ) {
+        var lessonOptions = lessonService.findLessonById(lessonId);
+        if (lessonOptions.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Aula não encontrada!");
+        }
+
+        var duplicatedLesson = new LessonEntity();
+        BeanUtils.copyProperties(lessonOptions.get(), duplicatedLesson);
+        duplicatedLesson.setDate(LocalDate.now(ZoneId.of("UTC-3")));
+        duplicatedLesson.setId(null);
+        duplicatedLesson.setBnccCodes(null);
+        duplicatedLesson.setAttendances(null);
+
+        List<String> codes = new ArrayList<>();
+        for (BNCCCodeEntity bnccCode:
+                lessonOptions.get().getBnccCodes()) {
+            codes.add(bnccCode.getCode());
+        }
+        bnccCodeService.setBnccCodesToLesson(codes, duplicatedLesson);
+        lessonService.saveLesson(duplicatedLesson);
+
+        return ResponseEntity.ok("Aula duplicada com sucesso!");
+    }
+
+
+
 
     @GetMapping("/all") //GET endpoint to get all lessons
     @PreAuthorize("hasRole('ROLE_ADM')")

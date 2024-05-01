@@ -53,7 +53,8 @@ public class LessonEntity {
 
     @JsonGetter(value = "attendances")
     public Integer getAttendancesQuantity() {
-        return attendances.size();
+        if (attendances != null) return attendances.size();
+        return 0;
     }
 
 }
