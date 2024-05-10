@@ -6,8 +6,8 @@ import com.api.notebook.models.AuthModel;
 import com.api.notebook.models.AuthReturnModel;
 import com.api.notebook.models.AuthTryModel;
 import com.api.notebook.models.entities.NotebookEntity;
+import com.api.notebook.models.entities.TeacherEntity;
 import com.api.notebook.models.entities.UserEntity;
-import com.api.notebook.models.entities.VCodeEntity;
 import com.api.notebook.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
@@ -30,23 +30,23 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public void user(UserEntity user) {
+    public void editUser(UserEntity user) {
         userRepository.save(user);
     }
 
-    public List<UserEntity> findAllUsers() {
+    public List<? extends UserEntity> findAllUsers() {
         return userRepository.findAll();
     }
 
-    public List<UserEntity> findAllUsersByRole(RoleEnum role) {
+    public List<? extends UserEntity> findAllUsersByRole(RoleEnum role) {
         return userRepository.findAllByRole(role);
     }
 
-    public Optional<UserEntity> findUserById(UUID id) {
+    public Optional<? extends UserEntity> findUserById(UUID id) {
         return userRepository.findById(id);
     }
 
-    public Optional<UserEntity> findUserByEmail(String email) {
+    public Optional<? extends UserEntity> findUserByEmail(String email) {
         return userRepository.findByEmail(email);
     }
 
@@ -78,14 +78,11 @@ public class UserService {
         ));
     }
 
-    public void setVCodeToUser(UUID userId, @NotNull VCodeEntity verificationCode) {
+    public void setNotebookToUser(UUID userId, @NotNull NotebookEntity notebook) { //Set notebook to a user
         var userOptional = findUserById(userId);
-        userOptional.ifPresent(verificationCode::setUser);
-    }
-
-    public void setNotebookToUser(UUID userId, @NotNull NotebookEntity notebook) { //Set notebook to an user
-        var userOptional = findUserById(userId);
-        userOptional.ifPresent(notebook::setUser);
+        if (userOptional.isPresent()) {
+            notebook.setTeacher((TeacherEntity) userOptional.get());
+        }
     }
 
 }

@@ -32,6 +32,11 @@ public class StudentEntity {
     private ClassEnum classe;
 
     @JsonIgnore
+    @ManyToOne
+    @JoinColumn(name = "institution_id")
+    private InstitutionEntity institution;
+
+    @JsonIgnore
     @ManyToMany(mappedBy = "students", cascade = {CascadeType.ALL})
     private List<NotebookEntity> notebooks;
 

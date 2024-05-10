@@ -2,14 +2,12 @@ package com.api.notebook.controllers;
 
 import com.api.notebook.enums.RoleEnum;
 import com.api.notebook.enums.StatusEnum;
-import com.api.notebook.enums.VCodeEnum;
 import com.api.notebook.models.dtos.NotebookDto;
-import com.api.notebook.models.entities.EmailEntity;
 import com.api.notebook.models.entities.NotebookEntity;
-import com.api.notebook.models.entities.VCodeEntity;
-import com.api.notebook.services.*;
-import com.api.notebook.utils.CodeGenerator;
-import com.api.notebook.utils.Constants;
+import com.api.notebook.services.MailService;
+import com.api.notebook.services.NotebookService;
+import com.api.notebook.services.StudentService;
+import com.api.notebook.services.UserService;
 import com.api.notebook.utils.NotebookUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -40,7 +38,6 @@ public class NotebookController {
     private final NotebookService notebookService;
     private final UserService userService;
     private final StudentService studentService;
-    private final VCodeService vCodeService;
     private final MailService mailService;
 
 
@@ -113,7 +110,7 @@ public class NotebookController {
         if (notebook.isPresent()) {
             var authentication = SecurityContextHolder.getContext().getAuthentication();
             if (
-                    !notebook.get().getUser().getId().equals(authentication.getPrincipal()) &&
+                    !notebook.get().getTeacher().getId().equals(authentication.getPrincipal()) &&
                             !authentication.getAuthorities().contains(new SimpleGrantedAuthority(RoleEnum.ROLE_ADM.name()))
             ) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
@@ -152,7 +149,7 @@ public class NotebookController {
         var notebookOptional = notebookService.findNotebookById(notebookId);
         if (notebookOptional.isPresent()) {
             var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            if (notebookOptional.get().getUser().getId().equals(authenticationId)) {
+            if (notebookOptional.get().getTeacher().getId().equals(authenticationId)) {
                 var notebookEntity = new NotebookEntity();
                 BeanUtils.copyProperties(notebookOptional.get(), notebookEntity);
                 BeanUtils.copyProperties(notebookDto, notebookEntity);
@@ -181,63 +178,10 @@ public class NotebookController {
 
     //DELETE
 
-    @PostMapping("/{notebookId}/delete-request")
-    public ResponseEntity<Object> deleteNotebookRequest(
-            @PathVariable(value = "notebookId") UUID notebookId,
-            @RequestParam(value = "userId") UUID userId
-    ) {
-
-        var userOptional = userService.findUserById(userId);
-        if (userOptional.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuário não encontrado!");
-        }
-
-        var notebookOptional = notebookService.findNotebookById(notebookId);
-        if (notebookOptional.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Caderneta não encontrada!");
-        }
-
-        if (vCodeService.existsByUserIdAndType(
-                userId, VCodeEnum.NOTEBOOK_DELETE)) {
-            var vCodeOptional = vCodeService.findByUserIdAndType(
-                    userId, VCodeEnum.NOTEBOOK_DELETE);
-            vCodeService.deleteById(vCodeOptional.get().getId());
-        }
-
-        var code = CodeGenerator.generateCode();
-        var vCodeEntity = new VCodeEntity();
-        vCodeEntity.setCode(code);
-        vCodeEntity.setType(VCodeEnum.NOTEBOOK_DELETE);
-        userService.setVCodeToUser(userId, vCodeEntity);
-        vCodeService.save(vCodeEntity);
-
-        mailService.sendEmail(new EmailEntity(
-                null,
-                userOptional.get().getEmail(),
-                "Requisição Para Deletar Caderneta",
-                String.format("Para confirmar a deleção da caderneta " +
-                                "da sala: {%s}, matéria: {%s} e bimestre: {%s}," +
-                                " clique neste link ou copie e cole em seu navegador:" +
-                                "%s/cadernetas?deleteNotebookId=%s&deleteNotebookVCode=%s",
-                        notebookOptional.get().getClasse(),
-                        notebookOptional.get().getSubject(),
-                        notebookOptional.get().getBimester(),
-                        Constants.APP_URL,
-                        notebookOptional.get().getId(),
-                        code
-                ),
-                null
-        ));
-
-        return ResponseEntity.ok("Requisição para deletar a caderneta enviada com sucesso!");
-
-    }
-
     @DeleteMapping("/{notebookId}/delete")
     @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<?> deleteNotebook(
-            @PathVariable(value = "notebookId") UUID notebookId,
-            @RequestParam(value = "vCode") Integer vCode
+            @PathVariable(value = "notebookId") UUID notebookId
     ) {
 
         var notebookOptional = notebookService.findNotebookById(notebookId);
@@ -246,24 +190,12 @@ public class NotebookController {
         }
 
         var auth = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (!notebookOptional.get().getUser().getId().equals(auth)) {
+        if (!notebookOptional.get().getTeacher().getId().equals(auth)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body("Você não pode deletar a caderneta de outros usuários!");
         }
 
-        var vCodeOptional = vCodeService.findByUserIdAndType(
-                notebookOptional.get().getUser().getId(), VCodeEnum.NOTEBOOK_DELETE);
-        if (vCodeOptional.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("Nenhuma requisição para deletar essa caderneta encontrada!");
-        }
-
-        if (!vCodeOptional.get().getCode().equals(vCode)) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Código de verificação errado!");
-        }
-
         notebookService.deleteNotebookById(notebookId);
-        vCodeService.deleteById(vCodeOptional.get().getId());
 
         return ResponseEntity.ok("Caderneta deletada com sucesso!");
 
@@ -301,7 +233,7 @@ public class NotebookController {
         }
         var authentication = SecurityContextHolder.getContext().getAuthentication();
         if (
-                !notebookOptional.get().getUser().getId().equals(authentication.getPrincipal()) &&
+                !notebookOptional.get().getTeacher().getId().equals(authentication.getPrincipal()) &&
                         !authentication.getAuthorities().contains(new SimpleGrantedAuthority(RoleEnum.ROLE_ADM.name()))
         ) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
@@ -329,7 +261,7 @@ public class NotebookController {
         }
         var authentication = SecurityContextHolder.getContext().getAuthentication();
         if (
-                !notebookOptional.get().getUser().getId().equals(authentication.getPrincipal()) &&
+                !notebookOptional.get().getTeacher().getId().equals(authentication.getPrincipal()) &&
                         !authentication.getAuthorities().contains(new SimpleGrantedAuthority(RoleEnum.ROLE_ADM.name()))
         ) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();

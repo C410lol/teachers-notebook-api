@@ -82,7 +82,7 @@ public class WorkController {
         if (workOptional.isPresent()) {
             var authentication = SecurityContextHolder.getContext().getAuthentication();
             if (
-                    !workOptional.get().getNotebook().getUser().getId().equals(authentication.getPrincipal()) &&
+                    !workOptional.get().getNotebook().getTeacher().getId().equals(authentication.getPrincipal()) &&
                             !authentication.getAuthorities().contains(new SimpleGrantedAuthority(RoleEnum.ROLE_ADM.name()))
             ) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
@@ -99,7 +99,7 @@ public class WorkController {
         var workOptional = workService.findWorkById(workId);
         if (workOptional.isPresent()) {
             var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            if (workOptional.get().getNotebook().getUser().getId().equals(authenticationId)) {
+            if (workOptional.get().getNotebook().getTeacher().getId().equals(authenticationId)) {
                 var workEntity = new WorkEntity();
                 BeanUtils.copyProperties(workOptional.get(), workEntity);
                 BeanUtils.copyProperties(workDto, workEntity);
@@ -117,7 +117,7 @@ public class WorkController {
         var workOptional = workService.findWorkById(workId);
         if (workOptional.isPresent()) {
             var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            if (workOptional.get().getNotebook().getUser().getId().equals(authenticationId)) {
+            if (workOptional.get().getNotebook().getTeacher().getId().equals(authenticationId)) {
                 workService.deleteWorkById(workId);
                 return ResponseEntity.ok().build();
             }

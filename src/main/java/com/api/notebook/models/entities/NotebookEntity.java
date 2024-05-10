@@ -47,8 +47,8 @@ public class NotebookEntity {
 
     @ManyToOne
     @JsonIgnore
-    @JoinColumn(name = "user_id")
-    private UserEntity user;
+    @JoinColumn(name = "teacher_id")
+    private TeacherEntity teacher;
 
     @JsonIgnore
     @ManyToMany

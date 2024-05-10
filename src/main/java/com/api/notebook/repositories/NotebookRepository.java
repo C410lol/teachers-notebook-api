@@ -16,11 +16,11 @@ public interface NotebookRepository extends JpaRepository<NotebookEntity, UUID> 
 
     @Query(value = "SELECT * FROM notebooks WHERE user_id = :userId " +
             "AND bimester LIKE :bimester", nativeQuery = true)
-    Page<NotebookEntity> findByUserId(
+    Page<NotebookEntity> findByTeacherId(
             @Param(value = "userId") UUID userId,
             @Param(value = "bimester") String bimesterFilter,
             Pageable pageable);
 
-    List<NotebookEntity> findByUserId(UUID userId);
+    List<NotebookEntity> findByTeacherId(UUID userId);
 
 }

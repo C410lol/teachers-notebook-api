@@ -131,7 +131,7 @@ public class LessonController {
         if (lessonOptional.isPresent()) {
             var authentication = SecurityContextHolder.getContext().getAuthentication();
             if (
-                    !lessonOptional.get().getNotebook().getUser().getId().equals(authentication.getPrincipal()) &&
+                    !lessonOptional.get().getNotebook().getTeacher().getId().equals(authentication.getPrincipal()) &&
                             !authentication.getAuthorities().contains(new SimpleGrantedAuthority(RoleEnum.ROLE_ADM.name()))
             ) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
@@ -149,7 +149,7 @@ public class LessonController {
         var lessonOptional = lessonService.findLessonById(lessonId);
         if (lessonOptional.isPresent()) {
             var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            if (lessonOptional.get().getNotebook().getUser().getId().equals(authenticationId)) {
+            if (lessonOptional.get().getNotebook().getTeacher().getId().equals(authenticationId)) {
                 var lessonEntity = new LessonEntity();
                 BeanUtils.copyProperties(lessonOptional.get(), lessonEntity);
                 BeanUtils.copyProperties(lessonDto, lessonEntity);
@@ -172,7 +172,7 @@ public class LessonController {
         var lessonOptional = lessonService.findLessonById(lessonId);
         if (lessonOptional.isPresent()) {
             var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            if (lessonOptional.get().getNotebook().getUser().getId().equals(authenticationId)) {
+            if (lessonOptional.get().getNotebook().getTeacher().getId().equals(authenticationId)) {
                 lessonService.deleteLessonById(lessonId);
                 return ResponseEntity.ok().build();
             }
