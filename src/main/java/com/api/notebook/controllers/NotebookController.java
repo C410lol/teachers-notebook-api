@@ -45,8 +45,10 @@ public class NotebookController {
 
     @PostMapping("/create") //POST endpoint to create a notebook entity
     @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
-    public ResponseEntity<Object> createNotebook(@RequestParam(value = "teacherId") UUID teacherId,
-                                                 @RequestBody @Valid @NotNull NotebookDto notebookDto) {
+    public ResponseEntity<Object> createNotebook(
+            @RequestParam(value = "teacherId") UUID teacherId,
+            @RequestBody @Valid @NotNull NotebookDto notebookDto
+    ) {
         var notebookEntity = new NotebookEntity();
         BeanUtils.copyProperties(notebookDto, notebookEntity);
         notebookEntity.setStatus(StatusEnum.ON);

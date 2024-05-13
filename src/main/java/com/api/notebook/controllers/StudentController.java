@@ -3,6 +3,7 @@ package com.api.notebook.controllers;
 import com.api.notebook.enums.ClassEnum;
 import com.api.notebook.models.dtos.StudentDto;
 import com.api.notebook.models.entities.StudentEntity;
+import com.api.notebook.services.InstitutionService;
 import com.api.notebook.services.NotebookService;
 import com.api.notebook.services.StudentService;
 import com.api.notebook.utils.StudentComparator;
@@ -25,16 +26,24 @@ import java.util.UUID;
 @RequestMapping("/students")
 public class StudentController {
 
+    private final InstitutionService institutionService;
     private final StudentService studentService;
     private final NotebookService notebookService;
 
     @PostMapping("/create") //POST endpoint to create a student entity
     @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> createStudent(
-            @RequestBody @Valid @NotNull StudentDto studentDto
+            @RequestBody @Valid @NotNull StudentDto studentDto,
+            @RequestParam(value = "institutionId") UUID institutionId
     ) {
+        var institutionOptional = institutionService.findById(institutionId);
+        if (institutionOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Instituição não encontrada.");
+        }
+
         var studentEntity = new StudentEntity();
         BeanUtils.copyProperties(studentDto, studentEntity);
+        studentEntity.setInstitution(institutionOptional.get());
 
         var students = studentService.findAllStudentsByClasse(studentDto.getClasse());
 

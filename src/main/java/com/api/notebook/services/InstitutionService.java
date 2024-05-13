@@ -18,8 +18,8 @@ public class InstitutionService {
 
 
 
-    public void save(InstitutionEntity institution) {
-        insitutionRespository.save(institution);
+    public InstitutionEntity save(InstitutionEntity institution) {
+        return insitutionRespository.save(institution);
     }
 
 

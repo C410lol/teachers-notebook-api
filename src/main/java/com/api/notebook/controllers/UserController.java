@@ -34,42 +34,6 @@ public class UserController {
     private final MailService mailService;
 
 
-    //CREATE
-
-    @PostMapping("/create") //POST endpoint to create a teacher entity
-    public ResponseEntity<Object> createUser(@RequestBody @Valid @NotNull UserDto userDto) {
-        if (userService.existsByEmail(userDto.getEmail())) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Email já registrado!");
-        }
-
-        var teacherEntity = new TeacherEntity();
-        BeanUtils.copyProperties(userDto, teacherEntity);
-        teacherEntity.setRole(RoleEnum.ROLE_TCHR);
-        teacherEntity.setVerified(true);
-        userService.createUser(teacherEntity);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body("Usuário criado!");
-    }
-
-    @PostMapping("/create/admin") //POST endpoint to create an admin entity
-    @PreAuthorize("hasRole('ROLE_ADM')")
-    public ResponseEntity<?> createAdmin(
-            @RequestBody @Valid @NotNull UserDto userDto
-    ) {
-        if (userService.existsByEmail(userDto.getEmail())) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Email já registrado!");
-        }
-
-        var adminEntity = new AdminEntity();
-        BeanUtils.copyProperties(userDto, adminEntity);
-        adminEntity.setRole(RoleEnum.ROLE_ADM);
-        adminEntity.setVerified(true);
-        userService.createUser(adminEntity);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body("Usuário criado!");
-    }
-
-    //CREATE
 
 
     //READ
@@ -78,12 +42,6 @@ public class UserController {
     @PreAuthorize("hasRole('ROLE_ADM')")
     public ResponseEntity<List<? extends UserEntity>> getAllUsers() {
         return ResponseEntity.ok(userService.findAllUsers());
-    }
-
-    @GetMapping("/all/teachers")
-    @PreAuthorize("hasRole('ROLE_ADM')")
-    public ResponseEntity<Object> getAllTeachers() {
-        return ResponseEntity.ok(userService.findAllUsersByRole(RoleEnum.ROLE_TCHR));
     }
 
     @GetMapping("/{userId}")

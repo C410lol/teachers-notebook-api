@@ -1,6 +1,5 @@
 package com.api.notebook.models.entities;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -20,15 +19,16 @@ public class InstitutionEntity {
     @Column(name = "name")
     private String name;
 
-    @JsonIgnore
+    @OneToOne
+    @JoinColumn(name = "creator_id", referencedColumnName = "id")
+    private AdminEntity creator;
+
     @OneToMany(mappedBy = "institution")
     private List<AdminEntity> admins;
 
-    @JsonIgnore
     @OneToMany(mappedBy = "institution")
     private List<TeacherEntity> teachers;
 
-    @JsonIgnore
     @OneToMany(mappedBy = "institution")
     private List<StudentEntity> students;
 

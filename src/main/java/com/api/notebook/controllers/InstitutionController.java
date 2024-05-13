@@ -1,8 +1,11 @@
 package com.api.notebook.controllers;
 
+import com.api.notebook.enums.RoleEnum;
 import com.api.notebook.models.dtos.InstitutionDto;
 import com.api.notebook.models.entities.InstitutionEntity;
+import com.api.notebook.services.AdminService;
 import com.api.notebook.services.InstitutionService;
+import com.api.notebook.services.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.http.HttpStatus;
@@ -17,6 +20,8 @@ import java.util.UUID;
 @RequestMapping("/institutions")
 public class InstitutionController {
 
+    private final AdminService adminService;
+    private final UserService userService;
     private final InstitutionService institutionService;
 
 
@@ -25,13 +30,24 @@ public class InstitutionController {
     //CREATE
 
     @PostMapping("/create")
-    @PreAuthorize("hasRole('ROLE_ADM')")
+    @PreAuthorize("hasAnyRole('ROLE_ADM', 'ROLE_SUPER')")
     public ResponseEntity<?> createInstitution(
-            @RequestBody InstitutionDto institutionDto
+            @RequestBody InstitutionDto institutionDto,
+            @RequestParam(value = "adminId") UUID adminId
     ) {
+        var adminOptional = adminService.findById(adminId);
+        if (adminOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Admin não encontrado.");
+        }
+
         var institutionEntity = new InstitutionEntity();
         BeanUtils.copyProperties(institutionDto, institutionEntity);
+        institutionEntity.setCreator(adminOptional.get());
         institutionService.save(institutionEntity);
+
+        adminOptional.get().setRole(RoleEnum.ROLE_SUPER);
+
+        userService.editUser(adminOptional.get());
 
         return ResponseEntity.status(HttpStatus.CREATED).body("Instituição criada com sucesso!");
     }
@@ -44,14 +60,14 @@ public class InstitutionController {
     //READ
 
     @GetMapping("/all")
-    @PreAuthorize("hasRole('ROLE_ADM')")
+    @PreAuthorize("hasRole('ROLE_SUPER')")
     public ResponseEntity<?> findAllInstitutions() {
         return ResponseEntity.ok(institutionService.findAll());
     }
 
     @GetMapping("/{institutionId}")
-    @PreAuthorize("hasRole('ROLE_ADM')")
-    public ResponseEntity<?> findAllInstitutions(
+    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM', 'ROLE_SUPER')")
+    public ResponseEntity<?> findInstitutionById(
             @PathVariable(value = "institutionId") UUID institutionId
     ) {
         var institutionOptional = institutionService.findById(institutionId);
