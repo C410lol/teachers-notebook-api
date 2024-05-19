@@ -31,7 +31,7 @@ public class StudentController {
     private final NotebookService notebookService;
 
     @PostMapping("/create") //POST endpoint to create a student entity
-    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM', 'ROLE_SUPER')")
+    @PreAuthorize("hasAnyRole('ROLE_ADM', 'ROLE_SUPER')")
     public ResponseEntity<Object> createStudent(
             @RequestBody @Valid @NotNull StudentDto studentDto,
             @RequestParam(value = "institutionId") UUID institutionId
