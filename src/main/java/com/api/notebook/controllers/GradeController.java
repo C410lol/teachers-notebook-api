@@ -48,7 +48,6 @@ public class GradeController {
     }
 
     @GetMapping("/all/{workId}") //GET endpoint to get all grades
-    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> getAllGradesByWorkId(
             @PathVariable(value = "workId") UUID workId
     ) {

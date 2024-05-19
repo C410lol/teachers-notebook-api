@@ -31,7 +31,7 @@ public class StudentController {
     private final NotebookService notebookService;
 
     @PostMapping("/create") //POST endpoint to create a student entity
-    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
+    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM', 'ROLE_SUPER')")
     public ResponseEntity<Object> createStudent(
             @RequestBody @Valid @NotNull StudentDto studentDto,
             @RequestParam(value = "institutionId") UUID institutionId
@@ -93,7 +93,6 @@ public class StudentController {
 
 
     @GetMapping("/all")
-    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> getAllByClasse(
             @RequestParam(value = "classe", required = false) String classe
     ) {
@@ -112,7 +111,6 @@ public class StudentController {
 
 
     @GetMapping("/all/{notebookId}") //GET endpoint to get all students
-    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> getAllStudents(
             @PathVariable(value = "notebookId") UUID notebookId
     ) {
@@ -133,7 +131,7 @@ public class StudentController {
 
 
     @PutMapping("/{studentId}/edit")
-    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
+    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM', 'ROLE_SUPER')")
     public ResponseEntity<Object> editStudent(
             @PathVariable(value = "studentId") UUID studentId,
             @RequestBody @Valid StudentDto studentDto
@@ -219,7 +217,7 @@ public class StudentController {
 
 
     @PutMapping("/{studentId}/edit/classe")
-    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
+    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM', 'ROLE_SUPER')")
     public ResponseEntity<Object> editStudentClasse(
             @PathVariable(value = "studentId") UUID studentId,
             @RequestBody @Valid StudentDto studentDto
@@ -277,6 +275,7 @@ public class StudentController {
     //DELETE
 
     @DeleteMapping("/{studentId}/delete")
+    @PreAuthorize("hasAnyRole('ROLE_ADM', 'ROLE_SUPER')")
     public ResponseEntity<?> deleteStudent(
             @PathVariable(value = "studentId") UUID studentId
     ) {

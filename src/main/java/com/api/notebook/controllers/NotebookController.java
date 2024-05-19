@@ -33,7 +33,7 @@ import java.util.UUID;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/notebooks")
-public class NotebookController {
+public class    NotebookController {
 
     private final NotebookService notebookService;
     private final UserService userService;
@@ -75,7 +75,6 @@ public class NotebookController {
     }
 
     @GetMapping("/all/{teacherId}") //GET endpoint to get all notebooks
-    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> getAllNotebooksByTeacherId(
             @PathVariable(value = "teacherId") UUID teacherId,
 
@@ -85,13 +84,6 @@ public class NotebookController {
             @RequestParam(value = "direction", defaultValue = "desc", required = false) String direction,
             @RequestParam(value = "sortBy", defaultValue = "status", required = false) String sortBy
     ) {
-        var authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (
-                !authentication.getPrincipal().equals(teacherId) &&
-                        !authentication.getAuthorities().contains(new SimpleGrantedAuthority(RoleEnum.ROLE_ADM.name()))
-        ) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
         var pageable = PageRequest.of(
                 Integer.parseInt(pageNum),
                 20,
@@ -106,17 +98,9 @@ public class NotebookController {
     }
 
     @GetMapping("/{notebookId}")
-    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> getNotebookById(@PathVariable(value = "notebookId") UUID notebookId) {
         var notebook = notebookService.findNotebookById(notebookId);
         if (notebook.isPresent()) {
-            var authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (
-                    !notebook.get().getTeacher().getId().equals(authentication.getPrincipal()) &&
-                            !authentication.getAuthorities().contains(new SimpleGrantedAuthority(RoleEnum.ROLE_ADM.name()))
-            ) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-            }
             return ResponseEntity.ok(notebook.get());
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Caderneta não encontrada!");
@@ -124,7 +108,6 @@ public class NotebookController {
 
 
     @GetMapping("/{notebookId}/students-performance")
-    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> getStudentsPerformanceByNotebookId(
             @PathVariable(value = "notebookId") UUID notebookId
     ) {

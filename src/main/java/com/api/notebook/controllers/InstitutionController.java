@@ -30,7 +30,7 @@ public class InstitutionController {
     //CREATE
 
     @PostMapping("/create")
-    @PreAuthorize("hasAnyRole('ROLE_ADM', 'ROLE_SUPER')")
+    @PreAuthorize("hasRole('ROLE_ADM')")
     public ResponseEntity<?> createInstitution(
             @RequestBody InstitutionDto institutionDto,
             @RequestParam(value = "adminId") UUID adminId
@@ -40,11 +40,16 @@ public class InstitutionController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Admin não encontrado.");
         }
 
+        if (adminOptional.get().getInstitution() != null) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Instituição já cadastrada para este usuário!");
+        }
+
         var institutionEntity = new InstitutionEntity();
         BeanUtils.copyProperties(institutionDto, institutionEntity);
         institutionEntity.setCreator(adminOptional.get());
-        institutionService.save(institutionEntity);
+        var createdInstitution = institutionService.save(institutionEntity);
 
+        adminOptional.get().setInstitution(createdInstitution);
         adminOptional.get().setRole(RoleEnum.ROLE_SUPER);
 
         userService.editUser(adminOptional.get());
@@ -63,6 +68,13 @@ public class InstitutionController {
     @PreAuthorize("hasRole('ROLE_SUPER')")
     public ResponseEntity<?> findAllInstitutions() {
         return ResponseEntity.ok(institutionService.findAll());
+    }
+
+    @GetMapping("/all-by-name")
+    public ResponseEntity<?> findAllInstitutionsByName(
+            @RequestParam(value = "name") String name
+    ) {
+        return ResponseEntity.ok(institutionService.findAllByName(name));
     }
 
     @GetMapping("/{institutionId}")

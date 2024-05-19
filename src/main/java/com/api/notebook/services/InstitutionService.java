@@ -27,6 +27,12 @@ public class InstitutionService {
         return insitutionRespository.findAll();
     }
 
+    public List<InstitutionEntity> findAllByName(
+            String name
+    ) {
+        return insitutionRespository.findAllByNamePattern(name);
+    }
+
     public Optional<InstitutionEntity> findById(UUID institutionId) {
         return insitutionRespository.findById(institutionId);
     }

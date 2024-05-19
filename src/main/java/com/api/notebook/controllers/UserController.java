@@ -1,23 +1,16 @@
 package com.api.notebook.controllers;
 
-import com.api.notebook.enums.RoleEnum;
 import com.api.notebook.models.AuthModel;
-import com.api.notebook.models.dtos.UserDto;
 import com.api.notebook.models.dtos.UserWithoutPasswordDto;
-import com.api.notebook.models.entities.AdminEntity;
-import com.api.notebook.models.entities.TeacherEntity;
 import com.api.notebook.models.entities.UserEntity;
 import com.api.notebook.services.JwtService;
-import com.api.notebook.services.MailService;
 import com.api.notebook.services.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.BeanUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,7 +24,6 @@ public class UserController {
 
     private final UserService userService;
     private final JwtService jwtService;
-    private final MailService mailService;
 
 
 
@@ -50,14 +42,6 @@ public class UserController {
     ) {
         var userOptional = userService.findUserById(userId);
         if (userOptional.isPresent()) {
-            var authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (
-                    !authentication.getPrincipal().equals(userId) &&
-                            !authentication.getAuthorities().contains(new SimpleGrantedAuthority(RoleEnum.ROLE_ADM.name()))
-            ) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body("Não é possível visualizar a conta de outros usuários!");
-            }
             return ResponseEntity.ok(userOptional.get());
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuário não encontrado!");

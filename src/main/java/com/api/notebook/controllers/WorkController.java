@@ -31,7 +31,7 @@ public class WorkController {
     private final NotebookService notebookService;
 
     @PostMapping("/create") //POST endpoint to create a work entity
-    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
+    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM', 'ROLE_SUPER')")
     public ResponseEntity<Object> createWork(@RequestParam(value = "notebookId") UUID notebookId,
                                              @RequestBody @Valid @NotNull WorkDto workDto) {
         var workEntity = new WorkEntity();
@@ -55,7 +55,6 @@ public class WorkController {
     }
 
     @GetMapping("/all/{notebookId}") //GET endpoint to get all works
-    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> getAllWorksByNotebookId(
             @PathVariable(value = "notebookId") UUID notebookId,
             @RequestParam(value = "pageNum", defaultValue = "0", required = false) String pageNum,
@@ -76,17 +75,9 @@ public class WorkController {
     }
 
     @GetMapping("/{workId}")
-    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> getWorkById(@PathVariable(value = "workId") UUID workId) {
         var workOptional = workService.findWorkById(workId);
         if (workOptional.isPresent()) {
-            var authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (
-                    !workOptional.get().getNotebook().getTeacher().getId().equals(authentication.getPrincipal()) &&
-                            !authentication.getAuthorities().contains(new SimpleGrantedAuthority(RoleEnum.ROLE_ADM.name()))
-            ) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-            }
             return ResponseEntity.ok(workOptional.get());
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Trabalho/Tarefa não encontrada!");

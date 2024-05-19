@@ -26,7 +26,7 @@ public class AttendanceController {
     private final LessonService lessonService;
 
     @PostMapping("/create") //POST endpoint to create an attendance entity
-    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
+    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM', 'ROLE_SUPER')")
     public ResponseEntity<Object> createAttendance(
             @RequestParam(value = "lessonId") UUID lessonId,
             @RequestBody @Valid @NotNull List<AttendanceDto> attendanceDtos
@@ -55,7 +55,6 @@ public class AttendanceController {
     }
 
     @GetMapping("/all/{lessonId}") //GET endpoint to get all attendances
-    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> getAllAttendancesByLessonId(
             @PathVariable(value = "lessonId") UUID lessonId
     ) {

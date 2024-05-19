@@ -104,7 +104,6 @@ public class LessonController {
     }
 
     @GetMapping("/all/{notebookId}") //GET endpoint to get all lessons
-    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> getAllLessonsByNotebookId(
             @PathVariable(value = "notebookId") UUID notebookId,
             @RequestParam(value = "pageNum", defaultValue = "0", required = false) String pageNum,
@@ -125,17 +124,9 @@ public class LessonController {
     }
 
     @GetMapping("/{lessonId}")
-    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> getLessonById(@PathVariable(value = "lessonId") UUID lessonId) {
         var lessonOptional = lessonService.findLessonById(lessonId);
         if (lessonOptional.isPresent()) {
-            var authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (
-                    !lessonOptional.get().getNotebook().getTeacher().getId().equals(authentication.getPrincipal()) &&
-                            !authentication.getAuthorities().contains(new SimpleGrantedAuthority(RoleEnum.ROLE_ADM.name()))
-            ) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-            }
             return ResponseEntity.ok(lessonOptional.get());
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Aula não encontrada!");

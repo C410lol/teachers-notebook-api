@@ -28,10 +28,12 @@ public class UserEntity {
 
     private Boolean verified;
 
-    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "institution_id")
     private InstitutionEntity institution;
+
+
+
 
     public boolean isVerified() { return verified; }
 

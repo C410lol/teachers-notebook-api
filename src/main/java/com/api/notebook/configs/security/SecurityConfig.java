@@ -35,7 +35,8 @@ public class SecurityConfig {
                                         "/users/login",
                                         "/users/{teacherId}/verified",
                                         "/teachers/create**",
-                                        "/admins/create**")
+                                        "/admins/create**",
+                                        "/institutions/all-by-name**")
                                 .permitAll().anyRequest().authenticated())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class) //Adding JWT filter
                 .build();
