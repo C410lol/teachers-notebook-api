@@ -1,12 +1,15 @@
 package com.api.notebook.controllers;
 
 import com.api.notebook.models.AuthModel;
+import com.api.notebook.models.AuthReturnModel;
 import com.api.notebook.models.dtos.UserWithoutPasswordDto;
 import com.api.notebook.models.entities.UserEntity;
+import com.api.notebook.services.InstitutionService;
 import com.api.notebook.services.JwtService;
 import com.api.notebook.services.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.BeanUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +26,7 @@ import java.util.UUID;
 public class UserController {
 
     private final UserService userService;
+    private final InstitutionService institutionService;
     private final JwtService jwtService;
 
 
@@ -30,11 +34,11 @@ public class UserController {
 
     //READ
 
-    @GetMapping("/all") //GET endpoint to get all teachers
-    @PreAuthorize("hasRole('ROLE_ADM')")
-    public ResponseEntity<List<? extends UserEntity>> getAllUsers() {
-        return ResponseEntity.ok(userService.findAllUsers());
-    }
+//    @GetMapping("/all") //GET endpoint to get all teachers
+//    @PreAuthorize("hasRole('ROLE_ADM')")
+//    public ResponseEntity<List<? extends UserEntity>> getAllUsers() {
+//        return ResponseEntity.ok(userService.findAllUsers());
+//    }
 
     @GetMapping("/{userId}")
     public ResponseEntity<Object> getUserById(
@@ -52,7 +56,7 @@ public class UserController {
 
     //EDIT
 
-    @PutMapping("/{userId}")
+    @PutMapping("/{userId}/edit")
     public ResponseEntity<Object> editUser(
             @PathVariable(value = "userId") UUID userId,
             @RequestBody @Valid UserWithoutPasswordDto userWithoutPasswordDto
@@ -76,6 +80,27 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuário não encontrado!");
     }
 
+    @PutMapping("/{userId}/set-institution")
+    public ResponseEntity<?> setInstitutionToTeacher(
+            @PathVariable(value = "userId") UUID userId,
+            @RequestParam(value = "institutionId") UUID institutionId
+    ) {
+        var userOptional = userService.findUserById(userId);
+        if (userOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuário não encontrado");
+        }
+
+        var institutionOptional = institutionService.findById(institutionId);
+        if (institutionOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Instituição não encontrada");
+        }
+
+        userOptional.get().setInstitution(institutionOptional.get());
+        userService.editUser(userOptional.get());
+
+        return ResponseEntity.ok("Usuário entrou na instituição!");
+    }
+
     @PutMapping("/{userId}/change-password")
     public ResponseEntity<Object> editUserPassword(
             @PathVariable(value = "userId") UUID userId,
@@ -97,7 +122,7 @@ public class UserController {
 
     //DELETE
 
-    @DeleteMapping("/{userId}")
+    @DeleteMapping("/{userId}/delete")
     public ResponseEntity<Object> deleteUser(
             @PathVariable(value = "userId") UUID userId
     ) {
@@ -163,6 +188,23 @@ public class UserController {
             default -> {
                 return ResponseEntity.badRequest().build();
             }
+        }
+    }
+
+    @PostMapping("/check-auth")
+    public ResponseEntity<?> checkUserAuth(
+            @RequestBody @NotNull AuthReturnModel userAuth
+    ) {
+        try {
+            if (
+                    jwtService.tryToAuthenticate(userAuth.getToken().substring(7)) == null ||
+                    !userService.existsById(userAuth.getUserId())
+            ) {
+                return ResponseEntity.ok(false);
+            }
+            return ResponseEntity.ok(true);
+        } catch (Exception e) {
+            return ResponseEntity.ok(false);
         }
     }
 
