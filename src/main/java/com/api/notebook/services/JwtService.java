@@ -64,11 +64,6 @@ public class JwtService {
                         List.of(new SimpleGrantedAuthority(teacherOptional.get().getRole().name()))
                 );
             }
-            return new UsernamePasswordAuthenticationToken(
-                    teacherOptional.get().getId(),
-                    teacherOptional.get().getPassword(),
-                    Collections.emptyList()
-            );
         }
         return null;
     }
