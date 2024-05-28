@@ -51,15 +51,6 @@ public class NotebookEntity {
     private TeacherEntity teacher;
 
     @JsonIgnore
-    @ManyToMany
-    @JoinTable(
-            name = "notebooks_students",
-            joinColumns = {@JoinColumn(name = "notebook_id")},
-            inverseJoinColumns = {@JoinColumn(name = "student_id")}
-    )
-    private List<StudentEntity> students;
-
-    @JsonIgnore
     @OneToMany(mappedBy = "notebook", cascade = {CascadeType.ALL})
     private List<LessonEntity> lessons;
 
@@ -67,10 +58,8 @@ public class NotebookEntity {
     @OneToMany(mappedBy = "notebook", cascade = {CascadeType.ALL})
     private List<WorkEntity> works;
 
-    @JsonGetter(value = "students")
-    public Integer getStudentsQuantity() {
-        return students.size();
-    }
+
+
 
     @JsonGetter(value = "lessons")
     public Integer getLessonsQuantity() {
