@@ -59,22 +59,22 @@ public class NotebookService {
         notebookOptional.ifPresent(work::setNotebook);
     }
 
-    public MissingTasksModel verifyAllMissingTasks(UUID teacherId) {
-        var notebooks = notebookRepository.findByTeacherId(teacherId);
-        List<MissingTaskModel> allMissingLessons = new ArrayList<>();
-        List<MissingTaskModel> allMissingWorks = new ArrayList<>();
+//    public MissingTasksModel verifyAllMissingTasks(UUID teacherId) {
+//        var notebooks = notebookRepository.findByTeacherId(teacherId);
+//        List<MissingTaskModel> allMissingLessons = new ArrayList<>();
+//        List<MissingTaskModel> allMissingWorks = new ArrayList<>();
+//
+//        for (NotebookEntity notebook :
+//                notebooks) {
+//            var missingTasks = verifyMissingTasksByNotebook(notebook);
+//            allMissingLessons.addAll(missingTasks.getMissingLessons());
+//            allMissingWorks.addAll(missingTasks.getMissingWorks());
+//        }
+//
+//        return new MissingTasksModel(allMissingLessons, allMissingWorks);
+//    }
 
-        for (NotebookEntity notebook :
-                notebooks) {
-            var missingTasks = verifyMissingTasksByNotebook(notebook);
-            allMissingLessons.addAll(missingTasks.getMissingLessons());
-            allMissingWorks.addAll(missingTasks.getMissingWorks());
-        }
-
-        return new MissingTasksModel(allMissingLessons, allMissingWorks);
-    }
-
-    public MissingTasksModel verifyMissingTasksByNotebook(@NotNull NotebookEntity notebook) {
+    public MissingTasksModel verifyMissingTasksByNotebook(@NotNull NotebookEntity notebook, int studentsLength) {
         List<MissingTaskModel> missingLessons = new ArrayList<>();
         List<MissingTaskModel> missingWorks = new ArrayList<>();
         for (LessonEntity lesson :
@@ -89,7 +89,7 @@ public class NotebookService {
         }
         for (WorkEntity work :
                 notebook.getWorks()) {
-            if (work.getGrades().size() < notebook.getStudents().size()) {
+            if (work.getGrades().size() < studentsLength) {
                 missingWorks.add(new MissingTaskModel(
                         work.getId(),
                         work.getTitle(),
