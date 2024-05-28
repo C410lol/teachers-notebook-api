@@ -34,6 +34,7 @@ public class SecurityConfig {
                         auth.requestMatchers(
                                         "/users/login",
                                         "/users/{teacherId}/verified",
+                                        "/users/check-auth",
                                         "/teachers/create**",
                                         "/admins/create**",
                                         "/institutions/all-by-name**")
