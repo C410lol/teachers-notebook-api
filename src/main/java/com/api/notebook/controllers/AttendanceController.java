@@ -26,10 +26,9 @@ public class AttendanceController {
     private final LessonService lessonService;
 
     @PostMapping("/create") //POST endpoint to create an attendance entity
-    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM', 'ROLE_SUPER')")
     public ResponseEntity<Object> createAttendance(
             @RequestParam(value = "lessonId") UUID lessonId,
-            @RequestBody @Valid @NotNull List<AttendanceDto> attendanceDtos
+            @RequestBody @NotNull List<AttendanceDto> attendanceDtos
     ) {
         int currentIndex = 0;
         for (AttendanceDto attendanceDto :
@@ -44,15 +43,15 @@ public class AttendanceController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    @GetMapping("/all") //GET endpoint to get all attendances
-    @PreAuthorize("hasRole('ROLE_ADM')")
-    public ResponseEntity<Object> getAllAttendances() {
-        var attendances = attendanceService.findAllAttendances();
-        if (attendances.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
-        return ResponseEntity.ok(attendances);
-    }
+//    @GetMapping("/all") //GET endpoint to get all attendances
+//    @PreAuthorize("hasRole('ROLE_ADM')")
+//    public ResponseEntity<Object> getAllAttendances() {
+//        var attendances = attendanceService.findAllAttendances();
+//        if (attendances.isEmpty()) {
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+//        }
+//        return ResponseEntity.ok(attendances);
+//    }
 
     @GetMapping("/all/{lessonId}") //GET endpoint to get all attendances
     public ResponseEntity<Object> getAllAttendancesByLessonId(
