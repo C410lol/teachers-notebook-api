@@ -30,8 +30,10 @@ public class WorkController {
     private final WorkService workService;
     private final NotebookService notebookService;
 
+
+
+
     @PostMapping("/create") //POST endpoint to create a work entity
-    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM', 'ROLE_SUPER')")
     public ResponseEntity<Object> createWork(@RequestParam(value = "notebookId") UUID notebookId,
                                              @RequestBody @Valid @NotNull WorkDto workDto) {
         var workEntity = new WorkEntity();
@@ -44,15 +46,15 @@ public class WorkController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    @GetMapping("/all") //GET endpoint to get all works
-    @PreAuthorize("hasRole('ROLE_ADM')")
-    public ResponseEntity<Object> getAllWorks() {
-        var works = workService.findAllWorks();
-        if (works.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
-        return ResponseEntity.ok(works);
-    }
+//    @GetMapping("/all") //GET endpoint to get all works
+//    @PreAuthorize("hasRole('ROLE_ADM')")
+//    public ResponseEntity<Object> getAllWorks() {
+//        var works = workService.findAllWorks();
+//        if (works.isEmpty()) {
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+//        }
+//        return ResponseEntity.ok(works);
+//    }
 
     @GetMapping("/all/{notebookId}") //GET endpoint to get all works
     public ResponseEntity<Object> getAllWorksByNotebookId(
@@ -84,37 +86,29 @@ public class WorkController {
     }
 
     @PutMapping("/edit/{workId}")
-    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> editWork(@PathVariable(value = "workId") UUID workId,
                                            @RequestBody @Valid WorkDto workDto) {
         var workOptional = workService.findWorkById(workId);
-        if (workOptional.isPresent()) {
-            var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            if (workOptional.get().getNotebook().getTeacher().getId().equals(authenticationId)) {
-                var workEntity = new WorkEntity();
-                BeanUtils.copyProperties(workOptional.get(), workEntity);
-                BeanUtils.copyProperties(workDto, workEntity);
-                workService.saveWork(workEntity);
-                return ResponseEntity.ok().build();
-            }
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        if (workOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Trabalho/Tarefa não encontrada!");
         }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Trabalho/Tarefa não encontrada!");
+
+        var workEntity = new WorkEntity();
+        BeanUtils.copyProperties(workOptional.get(), workEntity);
+        BeanUtils.copyProperties(workDto, workEntity);
+        workService.saveWork(workEntity);
+        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/delete/{workId}")
-    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> deleteWork(@PathVariable(value = "workId") UUID workId) {
         var workOptional = workService.findWorkById(workId);
-        if (workOptional.isPresent()) {
-            var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            if (workOptional.get().getNotebook().getTeacher().getId().equals(authenticationId)) {
-                workService.deleteWorkById(workId);
-                return ResponseEntity.ok().build();
-            }
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        if (workOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Trabalho/Tarefa não encontrada!");
         }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Trabalho/Tarefa não encontrada!");
+
+        workService.deleteWorkById(workId);
+        return ResponseEntity.ok().build();
     }
 
 }

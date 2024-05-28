@@ -26,7 +26,6 @@ public class GradeController {
     private final StudentService studentService;
 
     @PostMapping("/create") //POST endpoint to create a grade entity
-    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> createGrade(@RequestParam(value = "workId") UUID workId,
                                               @RequestBody @Valid @NotNull GradeDto gradeDto) {
         var gradeEntity = new GradeEntity();
@@ -37,15 +36,15 @@ public class GradeController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    @GetMapping("/all") //GET endpoint to get all grades
-    @PreAuthorize("hasRole('ROLE_ADM')")
-    public ResponseEntity<Object> getAllGrades() {
-        var grades = gradeService.findAllGrades();
-        if (grades.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
-        return ResponseEntity.ok(grades);
-    }
+//    @GetMapping("/all") //GET endpoint to get all grades
+//    @PreAuthorize("hasRole('ROLE_ADM')")
+//    public ResponseEntity<Object> getAllGrades() {
+//        var grades = gradeService.findAllGrades();
+//        if (grades.isEmpty()) {
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+//        }
+//        return ResponseEntity.ok(grades);
+//    }
 
     @GetMapping("/all/{workId}") //GET endpoint to get all grades
     public ResponseEntity<Object> getAllGradesByWorkId(
