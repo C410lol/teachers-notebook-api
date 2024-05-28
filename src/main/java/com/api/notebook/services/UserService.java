@@ -25,6 +25,9 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
+
+
+
     public UserEntity createUser(@NotNull UserEntity user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
@@ -33,6 +36,9 @@ public class UserService {
     public void editUser(UserEntity user) {
         userRepository.save(user);
     }
+
+
+
 
     public List<? extends UserEntity> findAllUsers() {
         return userRepository.findAll();
@@ -50,13 +56,25 @@ public class UserService {
         return userRepository.findByEmail(email);
     }
 
+    public boolean existsById(
+            UUID id
+    ) {
+        return userRepository.existsById(id);
+    }
+
     public boolean existsByEmail(String email) {
         return userRepository.existsByEmail(email);
     }
 
+
+
+
     public void deleteUserById(UUID id) {
         userRepository.deleteById(id);
     }
+
+
+
 
     //Try to authenticate user
     public AuthTryModel tryToAuthenticate(@NotNull AuthModel authModel, JwtService jwtService) {
