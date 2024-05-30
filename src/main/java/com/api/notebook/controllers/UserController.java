@@ -51,7 +51,20 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuário não encontrado!");
     }
 
+    @GetMapping("/get-by-email")
+    public ResponseEntity<?> getUserByEmail(
+            @RequestParam(value = "email") String email
+    ) {
+        var userOptional = userService.findUserByEmail(email);
+        if (userOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        return ResponseEntity.ok(userOptional.get());
+    }
+
     //READ
+
+
 
 
     //EDIT
@@ -120,6 +133,8 @@ public class UserController {
     //EDIT
 
 
+
+
     //DELETE
 
     @DeleteMapping("/{userId}/delete")
@@ -144,6 +159,8 @@ public class UserController {
     }
 
     //DELETE
+
+
 
 
     //VERIFICATIONS
