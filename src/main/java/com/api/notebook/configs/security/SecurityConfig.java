@@ -33,6 +33,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> //Authorizing some endpoints
                         auth.requestMatchers(
                                         "/users/login",
+                                        "/users/get-by-email**",
+                                        "/users/{userId}/change-password",
                                         "/users/{teacherId}/verified",
                                         "/users/check-auth",
                                         "/teachers/create**",
