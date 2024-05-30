@@ -30,8 +30,10 @@ public class WorkController {
     private final WorkService workService;
     private final NotebookService notebookService;
 
+
+
+
     @PostMapping("/create") //POST endpoint to create a work entity
-    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> createWork(@RequestParam(value = "notebookId") UUID notebookId,
                                              @RequestBody @Valid @NotNull WorkDto workDto) {
         var workEntity = new WorkEntity();
@@ -44,18 +46,17 @@ public class WorkController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    @GetMapping("/all") //GET endpoint to get all works
-    @PreAuthorize("hasRole('ROLE_ADM')")
-    public ResponseEntity<Object> getAllWorks() {
-        var works = workService.findAllWorks();
-        if (works.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
-        return ResponseEntity.ok(works);
-    }
+//    @GetMapping("/all") //GET endpoint to get all works
+//    @PreAuthorize("hasRole('ROLE_ADM')")
+//    public ResponseEntity<Object> getAllWorks() {
+//        var works = workService.findAllWorks();
+//        if (works.isEmpty()) {
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+//        }
+//        return ResponseEntity.ok(works);
+//    }
 
     @GetMapping("/all/{notebookId}") //GET endpoint to get all works
-    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> getAllWorksByNotebookId(
             @PathVariable(value = "notebookId") UUID notebookId,
             @RequestParam(value = "pageNum", defaultValue = "0", required = false) String pageNum,
@@ -76,54 +77,38 @@ public class WorkController {
     }
 
     @GetMapping("/{workId}")
-    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> getWorkById(@PathVariable(value = "workId") UUID workId) {
         var workOptional = workService.findWorkById(workId);
         if (workOptional.isPresent()) {
-            var authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (
-                    !workOptional.get().getNotebook().getUser().getId().equals(authentication.getPrincipal()) &&
-                            !authentication.getAuthorities().contains(new SimpleGrantedAuthority(RoleEnum.ROLE_ADM.name()))
-            ) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-            }
             return ResponseEntity.ok(workOptional.get());
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Trabalho/Tarefa não encontrada!");
     }
 
     @PutMapping("/edit/{workId}")
-    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> editWork(@PathVariable(value = "workId") UUID workId,
                                            @RequestBody @Valid WorkDto workDto) {
         var workOptional = workService.findWorkById(workId);
-        if (workOptional.isPresent()) {
-            var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            if (workOptional.get().getNotebook().getUser().getId().equals(authenticationId)) {
-                var workEntity = new WorkEntity();
-                BeanUtils.copyProperties(workOptional.get(), workEntity);
-                BeanUtils.copyProperties(workDto, workEntity);
-                workService.saveWork(workEntity);
-                return ResponseEntity.ok().build();
-            }
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        if (workOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Trabalho/Tarefa não encontrada!");
         }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Trabalho/Tarefa não encontrada!");
+
+        var workEntity = new WorkEntity();
+        BeanUtils.copyProperties(workOptional.get(), workEntity);
+        BeanUtils.copyProperties(workDto, workEntity);
+        workService.saveWork(workEntity);
+        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/delete/{workId}")
-    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> deleteWork(@PathVariable(value = "workId") UUID workId) {
         var workOptional = workService.findWorkById(workId);
-        if (workOptional.isPresent()) {
-            var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            if (workOptional.get().getNotebook().getUser().getId().equals(authenticationId)) {
-                workService.deleteWorkById(workId);
-                return ResponseEntity.ok().build();
-            }
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        if (workOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Trabalho/Tarefa não encontrada!");
         }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Trabalho/Tarefa não encontrada!");
+
+        workService.deleteWorkById(workId);
+        return ResponseEntity.ok().build();
     }
 
 }

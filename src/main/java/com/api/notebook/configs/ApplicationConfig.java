@@ -15,10 +15,4 @@ public class ApplicationConfig {
         return new BCryptPasswordEncoder();
     }
 
-    @Bean
-    public Random random() {
-        return new Random();
-    }
-
-
 }

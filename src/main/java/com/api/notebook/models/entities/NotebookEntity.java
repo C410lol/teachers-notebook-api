@@ -47,17 +47,8 @@ public class NotebookEntity {
 
     @ManyToOne
     @JsonIgnore
-    @JoinColumn(name = "user_id")
-    private UserEntity user;
-
-    @JsonIgnore
-    @ManyToMany
-    @JoinTable(
-            name = "notebooks_students",
-            joinColumns = {@JoinColumn(name = "notebook_id")},
-            inverseJoinColumns = {@JoinColumn(name = "student_id")}
-    )
-    private List<StudentEntity> students;
+    @JoinColumn(name = "teacher_id")
+    private TeacherEntity teacher;
 
     @JsonIgnore
     @OneToMany(mappedBy = "notebook", cascade = {CascadeType.ALL})
@@ -67,10 +58,8 @@ public class NotebookEntity {
     @OneToMany(mappedBy = "notebook", cascade = {CascadeType.ALL})
     private List<WorkEntity> works;
 
-    @JsonGetter(value = "students")
-    public Integer getStudentsQuantity() {
-        return students.size();
-    }
+
+
 
     @JsonGetter(value = "lessons")
     public Integer getLessonsQuantity() {

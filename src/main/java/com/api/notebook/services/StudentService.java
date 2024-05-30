@@ -9,6 +9,8 @@ import com.api.notebook.utils.StudentComparator;
 import com.api.notebook.repositories.StudentRepository;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -20,6 +22,9 @@ public class StudentService {
     private final StudentRepository studentRepository;
     private final StudentComparator studentComparator = new StudentComparator();
 
+
+
+
     public void saveStudent(StudentEntity student) {
         studentRepository.save(student);
     }
@@ -28,10 +33,25 @@ public class StudentService {
         studentRepository.saveAll(students);
     }
 
+
+
+
     public List<StudentEntity> findAllStudents() {
         var all = studentRepository.findAll();
         all.sort(Comparator.comparing(StudentEntity::getNumber));
         return all;
+    }
+
+    public Page<StudentEntity> findAllByInstitutionAndClasse(
+            UUID institutionId,
+            String classe,
+            Pageable pageable
+    ) {
+        return studentRepository.findAllByInstitutionIdAndClasse(
+                institutionId,
+                classe,
+                pageable
+        );
     }
 
     public List<StudentEntity> findAllStudentsByClasse(ClassEnum classe) {
@@ -44,9 +64,19 @@ public class StudentService {
         return studentRepository.findById(id);
     }
 
+    public int getSizeOfStudentsByClasse(@NotNull ClassEnum classe) {
+        return studentRepository.getSizeOfStudentsByClasse(classe.name());
+    }
+
+
+
+
     public void deleteStudentById(UUID id) {
         studentRepository.deleteById(id);
     }
+
+
+
 
     //Set present students to an attendance
     public void setPresentStudentsToAttendance(@NotNull List<UUID> presentStudentsIds, AttendanceEntity attendance) {
@@ -77,11 +107,6 @@ public class StudentService {
     public void setStudentToGrade(UUID studentId, @NotNull GradeEntity grade) { //Set student to a grade
         var studentOptional = findStudentById(studentId);
         studentOptional.ifPresent(grade::setStudent);
-    }
-
-    //Set students to notebook by class enum
-    public void setStudentsToNotebookByClass(ClassEnum classEnum, @NotNull NotebookEntity notebook) {
-        notebook.setStudents(studentRepository.findAllByClasse(classEnum));
     }
 
 }

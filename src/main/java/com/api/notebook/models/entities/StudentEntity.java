@@ -32,15 +32,16 @@ public class StudentEntity {
     private ClassEnum classe;
 
     @JsonIgnore
-    @ManyToMany(mappedBy = "students", cascade = {CascadeType.ALL})
-    private List<NotebookEntity> notebooks;
+    @ManyToOne
+    @JoinColumn(name = "institution_id")
+    private InstitutionEntity institution;
 
     @JsonIgnore
-    @ManyToMany(mappedBy = "presentStudents", cascade = {CascadeType.ALL})
+    @ManyToMany(mappedBy = "presentStudents")
     private List<AttendanceEntity> presences;
 
     @JsonIgnore
-    @ManyToMany(mappedBy = "absentStudents", cascade = {CascadeType.ALL})
+    @ManyToMany(mappedBy = "absentStudents")
     private List<AttendanceEntity> absences;
 
     @JsonIgnore

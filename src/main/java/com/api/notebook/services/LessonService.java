@@ -45,7 +45,10 @@ public class LessonService {
         if (lessonOptional.isPresent()) {
 
             //Check if the lesson has attendances
-            if (!lessonOptional.get().getAttendances().isEmpty()) {
+            if (
+                    lessonOptional.get().getAttendances() != null &&
+                    lessonOptional.get().getAttendances().size() >= index + 1
+            ) {
 
                 //Take te attendance by the provided index
                 AttendanceEntity attendanceByIndex = lessonOptional.get().getAttendances().get(index);

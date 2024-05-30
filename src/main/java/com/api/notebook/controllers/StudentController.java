@@ -2,7 +2,10 @@ package com.api.notebook.controllers;
 
 import com.api.notebook.enums.ClassEnum;
 import com.api.notebook.models.dtos.StudentDto;
+import com.api.notebook.models.entities.AttendanceEntity;
 import com.api.notebook.models.entities.StudentEntity;
+import com.api.notebook.services.AttendanceService;
+import com.api.notebook.services.InstitutionService;
 import com.api.notebook.services.NotebookService;
 import com.api.notebook.services.StudentService;
 import com.api.notebook.utils.StudentComparator;
@@ -10,6 +13,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -25,16 +30,25 @@ import java.util.UUID;
 @RequestMapping("/students")
 public class StudentController {
 
+    private final InstitutionService institutionService;
     private final StudentService studentService;
     private final NotebookService notebookService;
+    private final AttendanceService attendanceService;
 
     @PostMapping("/create") //POST endpoint to create a student entity
-    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
+    @PreAuthorize("hasAnyRole('ROLE_ADM', 'ROLE_SUPER')")
     public ResponseEntity<Object> createStudent(
-            @RequestBody @Valid @NotNull StudentDto studentDto
+            @RequestBody @Valid @NotNull StudentDto studentDto,
+            @RequestParam(value = "institutionId") UUID institutionId
     ) {
+        var institutionOptional = institutionService.findById(institutionId);
+        if (institutionOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Instituição não encontrada.");
+        }
+
         var studentEntity = new StudentEntity();
         BeanUtils.copyProperties(studentDto, studentEntity);
+        studentEntity.setInstitution(institutionOptional.get());
 
         var students = studentService.findAllStudentsByClasse(studentDto.getClasse());
 
@@ -80,11 +94,40 @@ public class StudentController {
     }
 
 
+
+
     //READ
 
+    @GetMapping("/{institutionId}/all")
+    public ResponseEntity<?> getAllByInstitutionAndClasse(
+            @PathVariable(value = "institutionId") UUID institutionId,
+
+            @RequestParam(value = "classe", defaultValue = "%", required = false) String classe,
+
+            @RequestParam(value = "pageNum", defaultValue = "0", required = false) String pageNum,
+            @RequestParam(value = "direction", defaultValue = "asc", required = false) String direction,
+            @RequestParam(value = "sortBy", defaultValue = "number", required = false) String sortBy
+    ) {
+        var institutionOptional = institutionService.findById(institutionId);
+        if (institutionOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Instituição não encontrada.");
+        }
+
+        var pageable = PageRequest.of(
+                Integer.parseInt(pageNum),
+                30,
+                Sort.Direction.fromString(direction),
+                sortBy
+        );
+        var students = studentService.findAllByInstitutionAndClasse(institutionId, classe, pageable);
+        if (students.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Nenhum aluno encontrado");
+        }
+
+        return ResponseEntity.ok(students);
+    }
 
     @GetMapping("/all")
-    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> getAllByClasse(
             @RequestParam(value = "classe", required = false) String classe
     ) {
@@ -103,7 +146,6 @@ public class StudentController {
 
 
     @GetMapping("/all/{notebookId}") //GET endpoint to get all students
-    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> getAllStudents(
             @PathVariable(value = "notebookId") UUID notebookId
     ) {
@@ -114,6 +156,12 @@ public class StudentController {
         return ResponseEntity.ok(studentService.findAllStudentsByClasse(optionalNotebook.get().getClasse()));
     }
 
+    @GetMapping("/size")
+    public ResponseEntity<?> getStudentsSizeByClasse(
+            @RequestParam(value = "classe") ClassEnum classEnum
+    ) {
+        return ResponseEntity.ok(studentService.getSizeOfStudentsByClasse(classEnum));
+    }
 
     //READ
 
@@ -124,7 +172,7 @@ public class StudentController {
 
 
     @PutMapping("/{studentId}/edit")
-    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
+    @PreAuthorize("hasAnyRole('ROLE_ADM', 'ROLE_SUPER')")
     public ResponseEntity<Object> editStudent(
             @PathVariable(value = "studentId") UUID studentId,
             @RequestBody @Valid StudentDto studentDto
@@ -135,23 +183,38 @@ public class StudentController {
         }
 
         if (!studentOptional.get().getClasse().equals(studentDto.getClasse())) {
-            return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE)
-                    .body("Para mudar a turma do aluno, use o endpoint '/students/{id}/edit/classe'.");
+            editLastClasse(studentOptional.get().getClasse(), studentOptional.get().getNumber());
+
+            BeanUtils.copyProperties(studentDto, studentOptional.get());
+
+            var newClasseStudents = studentService.findAllStudentsByClasse(studentDto.getClasse());
+
+            if (!studentDto.getIsOrder()) {
+                studentOptional.get().setNumber(newClasseStudents.size() + 1);
+                studentService.saveStudent(studentOptional.get());
+
+                return ResponseEntity.ok("Aluno editado com sucesso!");
+            }
+
+            newClasseStudents.sort(Comparator.comparing(StudentEntity::getNumber));
+            insertOrderedStudentInClass(newClasseStudents, studentOptional.get());
+
+            return ResponseEntity.ok("Aluno editado com sucesso!");
         }
+
+        var lastClasseStudents = studentService.findAllStudentsByClasse(studentOptional.get().getClasse());
+        lastClasseStudents.sort(Comparator.comparing(StudentEntity::getNumber));
 
         BeanUtils.copyProperties(studentDto, studentOptional.get());
 
-        var students = studentService.findAllStudentsByClasse(studentDto.getClasse());
-        students.sort(Comparator.comparing(StudentEntity::getNumber));
-
         if (!studentDto.getIsOrder()) {
-            editNotOrderedStudentInClasse(students, studentOptional.get());
+            editNotOrderedStudentInClasse(lastClasseStudents, studentOptional.get());
             studentService.saveStudent(studentOptional.get());
 
             return ResponseEntity.ok("Aluno editado com sucesso!");
         }
 
-        editOrderesStudentInClasse(students, studentOptional.get());
+        editOrderesStudentInClasse(lastClasseStudents, studentOptional.get());
 
         return ResponseEntity.ok("Aluno editado com sucesso!");
     }
@@ -208,44 +271,6 @@ public class StudentController {
         }
     }
 
-
-    @PutMapping("/{studentId}/edit/classe")
-    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
-    public ResponseEntity<Object> editStudentClasse(
-            @PathVariable(value = "studentId") UUID studentId,
-            @RequestBody @Valid StudentDto studentDto
-    ) {
-        var studentOptional = studentService.findStudentById(studentId);
-        if (studentOptional.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Aluno não encontrado!");
-        }
-
-        if (studentOptional.get().getClasse().equals(studentDto.getClasse())) {
-            return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE)
-                    .body("Esse endpoint é utilizado para alterar a turma do aluno! " +
-                            "Se esse não for o seu caso, use o endpoint '/students/{id}/edit'");
-        }
-
-        editLastClasse(studentOptional.get().getClasse(), studentOptional.get().getNumber());
-
-        BeanUtils.copyProperties(studentDto, studentOptional.get());
-
-
-        var students = studentService.findAllStudentsByClasse(studentDto.getClasse());
-
-        if (!studentDto.getIsOrder()) {
-            studentOptional.get().setNumber(students.size() + 1);
-            studentService.saveStudent(studentOptional.get());
-
-            return ResponseEntity.ok("Aluno editado com sucesso!");
-        }
-
-        students.sort(Comparator.comparing(StudentEntity::getNumber));
-        insertOrderedStudentInClass(students, studentOptional.get());
-
-        return ResponseEntity.ok("Aluno editado com sucesso!");
-    }
-
     private void editLastClasse(
             ClassEnum classe,
             Integer studentNumber
@@ -262,12 +287,15 @@ public class StudentController {
         }
     }
 
+    //EDIT
+
 
 
 
     //DELETE
 
     @DeleteMapping("/{studentId}/delete")
+    @PreAuthorize("hasAnyRole('ROLE_ADM', 'ROLE_SUPER')")
     public ResponseEntity<?> deleteStudent(
             @PathVariable(value = "studentId") UUID studentId
     ) {
@@ -277,6 +305,15 @@ public class StudentController {
         }
 
         var allByClasse = studentService.findAllStudentsByClasse(studentOptional.get().getClasse());
+
+        for (AttendanceEntity attendance:
+                studentOptional.get().getPresences()) {
+            attendance.getPresentStudents().remove(studentOptional.get());
+        }
+        for (AttendanceEntity attendance:
+                studentOptional.get().getAbsences()) {
+            attendance.getAbsentStudents().remove(studentOptional.get());
+        }
         studentService.deleteStudentById(studentOptional.get().getId());
 
         for (int x = allByClasse.indexOf(studentOptional.get()) + 1; x < allByClasse.size(); x++) {

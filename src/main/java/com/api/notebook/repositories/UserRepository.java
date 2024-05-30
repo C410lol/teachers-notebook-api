@@ -12,10 +12,10 @@ import java.util.UUID;
 @Repository
 public interface UserRepository extends JpaRepository<UserEntity, UUID> {
 
-    Optional<UserEntity> findByEmail(String email);
+    Optional<? extends UserEntity> findByEmail(String email);
 
     boolean existsByEmail(String email);
 
-    List<UserEntity> findAllByRole(RoleEnum role);
+    List<? extends UserEntity> findAllByRole(RoleEnum role);
 
 }

@@ -14,13 +14,13 @@ import java.util.UUID;
 @Repository
 public interface NotebookRepository extends JpaRepository<NotebookEntity, UUID> {
 
-    @Query(value = "SELECT * FROM notebooks WHERE user_id = :userId " +
+    @Query(value = "SELECT * FROM notebooks WHERE teacher_id = :teacherId " +
             "AND bimester LIKE :bimester", nativeQuery = true)
-    Page<NotebookEntity> findByUserId(
-            @Param(value = "userId") UUID userId,
+    Page<NotebookEntity> findByTeacherId(
+            @Param(value = "teacherId") UUID teacherId,
             @Param(value = "bimester") String bimesterFilter,
             Pageable pageable);
 
-    List<NotebookEntity> findByUserId(UUID userId);
+    List<NotebookEntity> findByTeacherId(UUID teacherId);
 
 }

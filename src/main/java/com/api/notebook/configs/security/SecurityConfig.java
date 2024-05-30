@@ -32,13 +32,14 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable) //Disable CSRF
                 .authorizeHttpRequests(auth -> //Authorizing some endpoints
                         auth.requestMatchers(
-                                        "/users/create",
                                         "/users/login",
-                                        "/users/verify-account/{teacherId}",
-                                        "/users/resend-verification-email",
+                                        "/users/get-by-email**",
+                                        "/users/{userId}/change-password",
                                         "/users/{teacherId}/verified",
-                                        "/users/request-password-change",
-                                        "/users/{teacherId}/change-password")
+                                        "/users/check-auth",
+                                        "/teachers/create**",
+                                        "/admins/create**",
+                                        "/institutions/all-by-name**")
                                 .permitAll().anyRequest().authenticated())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class) //Adding JWT filter
                 .build();

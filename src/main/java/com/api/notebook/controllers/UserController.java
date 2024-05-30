@@ -1,19 +1,12 @@
 package com.api.notebook.controllers;
 
-import com.api.notebook.enums.RoleEnum;
-import com.api.notebook.enums.VCodeEnum;
 import com.api.notebook.models.AuthModel;
-import com.api.notebook.models.dtos.UserDto;
+import com.api.notebook.models.AuthReturnModel;
 import com.api.notebook.models.dtos.UserWithoutPasswordDto;
-import com.api.notebook.models.entities.EmailEntity;
 import com.api.notebook.models.entities.UserEntity;
-import com.api.notebook.models.entities.VCodeEntity;
+import com.api.notebook.services.InstitutionService;
 import com.api.notebook.services.JwtService;
-import com.api.notebook.services.MailService;
 import com.api.notebook.services.UserService;
-import com.api.notebook.services.VCodeService;
-import com.api.notebook.utils.CodeGenerator;
-import com.api.notebook.utils.Constants;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
@@ -21,11 +14,10 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -34,173 +26,106 @@ import java.util.UUID;
 public class UserController {
 
     private final UserService userService;
+    private final InstitutionService institutionService;
     private final JwtService jwtService;
-    private final VCodeService vCodeService;
-    private final MailService mailService;
 
 
-    //CREATE
-
-    @PostMapping("/create") //POST endpoint to create a teacher entity
-    public ResponseEntity<Object> createUser(@RequestBody @Valid @NotNull UserDto userDto) {
-        if (userService.existsByEmail(userDto.getEmail())) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Email já registrado!");
-        }
-
-        var teacherEntity = new UserEntity();
-        BeanUtils.copyProperties(userDto, teacherEntity);
-        teacherEntity.setVerified(false);
-        var createdUser = userService.createUser(teacherEntity);
-
-        var code = CodeGenerator.generateCode();
-        var verificationCodeEntity = new VCodeEntity();
-        verificationCodeEntity.setCode(code);
-        verificationCodeEntity.setType(VCodeEnum.EMAIL_VERIFICATION);
-        userService.setVCodeToUser(createdUser.getId(), verificationCodeEntity);
-        vCodeService.save(verificationCodeEntity);
-
-        mailService.sendEmail(new EmailEntity(
-                null,
-                teacherEntity.getEmail(),
-                "Confirme Sua Conta No Site TeacherNotesHub!",
-                String.format("Clique neste link para confirmar sua conta ou copie e cole no seu navegador: " +
-                                "%s/verify-account/%s?vCode=%s",
-                        Constants.APP_URL, teacherEntity.getId(), code),
-                null
-        ));
-
-        return ResponseEntity.status(HttpStatus.CREATED).body("Usuário criado!");
-    }
-
-    //CREATE
 
 
     //READ
 
-    @GetMapping("/all") //GET endpoint to get all teachers
-    @PreAuthorize("hasRole('ROLE_ADM')")
-    public ResponseEntity<Object> getAllUsers() {
-        return ResponseEntity.ok(userService.findAllUsers());
-    }
+//    @GetMapping("/all") //GET endpoint to get all teachers
+//    @PreAuthorize("hasRole('ROLE_ADM')")
+//    public ResponseEntity<List<? extends UserEntity>> getAllUsers() {
+//        return ResponseEntity.ok(userService.findAllUsers());
+//    }
 
-    @GetMapping("/all/teachers")
-    @PreAuthorize("hasRole('ROLE_ADM')")
-    public ResponseEntity<Object> getAllTeachers() {
-        return ResponseEntity.ok(userService.findAllUsersByRole(RoleEnum.ROLE_TCHR));
-    }
-
-    @GetMapping("/{teacherId}")
-    public ResponseEntity<Object> getUserById(@PathVariable(value = "teacherId") UUID teacherId) {
-        var userOptional = userService.findUserById(teacherId);
+    @GetMapping("/{userId}")
+    public ResponseEntity<Object> getUserById(
+            @PathVariable(value = "userId") UUID userId
+    ) {
+        var userOptional = userService.findUserById(userId);
         if (userOptional.isPresent()) {
-            var authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (
-                    !authentication.getPrincipal().equals(teacherId) &&
-                            !authentication.getAuthorities().contains(new SimpleGrantedAuthority(RoleEnum.ROLE_ADM.name()))
-            ) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body("Não é possível visualizar a conta de outros usuários!");
-            }
             return ResponseEntity.ok(userOptional.get());
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuário não encontrado!");
     }
 
+    @GetMapping("/get-by-email")
+    public ResponseEntity<?> getUserByEmail(
+            @RequestParam(value = "email") String email
+    ) {
+        var userOptional = userService.findUserByEmail(email);
+        if (userOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        return ResponseEntity.ok(userOptional.get());
+    }
+
     //READ
+
+
 
 
     //EDIT
 
-    @PutMapping("/{teacherId}")
-    public ResponseEntity<Object> editUser(@PathVariable(value = "teacherId") UUID teacherId,
-                                           @RequestBody @Valid UserWithoutPasswordDto userWithoutPasswordDto) {
-        var userOptional = userService.findUserById(teacherId);
+    @PutMapping("/{userId}/edit")
+    public ResponseEntity<Object> editUser(
+            @PathVariable(value = "userId") UUID userId,
+            @RequestBody @Valid UserWithoutPasswordDto userWithoutPasswordDto
+    ) {
+        var userOptional = userService.findUserById(userId);
         if (userOptional.isPresent()) {
+
             var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            if (authenticationId.equals(teacherId)) {
-                var teacherEntity = new UserEntity();
-                BeanUtils.copyProperties(userOptional.get(), teacherEntity);
-                BeanUtils.copyProperties(userWithoutPasswordDto, teacherEntity);
-                userService.user(teacherEntity);
+            if (authenticationId.equals(userId)) {
+
+                BeanUtils.copyProperties(userWithoutPasswordDto, userOptional.get());
+                userService.editUser(userOptional.get());
+
                 return ResponseEntity.ok().body("Usuário editado!");
             }
+
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body("Não é possível alterar a conta de outros usuários!");
         }
+
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuário não encontrado!");
     }
 
-    @PostMapping("/request-password-change")
-    public ResponseEntity<Object> requestPasswordChange(
-            @RequestParam(value = "id", required = false) UUID userId,
-            @RequestParam(value = "email", required = false) String userEmail
+    @PutMapping("/{userId}/set-institution")
+    public ResponseEntity<?> setInstitutionToTeacher(
+            @PathVariable(value = "userId") UUID userId,
+            @RequestParam(value = "institutionId") UUID institutionId
     ) {
-        Optional<UserEntity> userOptional;
-
-        if (userId != null) {
-            userOptional = userService.findUserById(userId);
-        } else if (userEmail != null) {
-            userOptional = userService.findUserByEmail(userEmail);
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
-
+        var userOptional = userService.findUserById(userId);
         if (userOptional.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuário não encontrado!");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuário não encontrado");
         }
 
-        if (vCodeService.existsByUserIdAndType(
-                userOptional.get().getId(), VCodeEnum.PASSWORD_CHANGE)) {
-            var codeId = vCodeService.findByUserIdAndType(
-                    userOptional.get().getId(), VCodeEnum.PASSWORD_CHANGE).get().getId();
-            vCodeService.deleteById(codeId);
+        var institutionOptional = institutionService.findById(institutionId);
+        if (institutionOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Instituição não encontrada");
         }
 
-        var code = CodeGenerator.generateCode();
-        var verificationCodeEntity = new VCodeEntity();
-        verificationCodeEntity.setCode(code);
-        verificationCodeEntity.setType(VCodeEnum.PASSWORD_CHANGE);
-        userService.setVCodeToUser(userOptional.get().getId(), verificationCodeEntity);
-        vCodeService.save(verificationCodeEntity);
+        userOptional.get().setInstitution(institutionOptional.get());
+        userService.editUser(userOptional.get());
 
-        mailService.sendEmail(new EmailEntity(
-                null,
-                userOptional.get().getEmail(),
-                "Requisição Para Trocar de Senha No Site TeacherNotesHub.",
-                String.format("Clique neste link para mudar sua senha ou copie e cole no seu navegador: " +
-                                "%s/change-password/%s?vCode=%s",
-                        Constants.APP_URL, userOptional.get().getId(), code),
-                null
-        ));
-
-        return ResponseEntity.ok("Requisição para trocar de senha enviada!");
+        return ResponseEntity.ok("Usuário entrou na instituição!");
     }
 
-    @PutMapping("/{teacherId}/change-password")
+    @PutMapping("/{userId}/change-password")
     public ResponseEntity<Object> editUserPassword(
-            @PathVariable(value = "teacherId") UUID teacherId,
-            @RequestParam(value = "vCode") Integer vCode,
+            @PathVariable(value = "userId") UUID userId,
             @RequestBody String newPassword
     ) {
-        var userOptional = userService.findUserById(teacherId);
+        var userOptional = userService.findUserById(userId);
         if (userOptional.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuário não encontrado!");
-        }
-
-        var vCodeOptional = vCodeService.findByUserIdAndType(teacherId, VCodeEnum.PASSWORD_CHANGE);
-        if (vCodeOptional.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("Código de verificação não registrado para essa conta!");
-        }
-
-        if (!vCodeOptional.get().getCode().equals(vCode)) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Código de verificação errado!");
         }
 
         userOptional.get().setPassword(newPassword);
         userService.createUser(userOptional.get());
-
-        vCodeService.deleteById(vCodeOptional.get().getId());
 
         return ResponseEntity.ok("Senha alterada!");
     }
@@ -208,53 +133,15 @@ public class UserController {
     //EDIT
 
 
+
+
     //DELETE
 
-    @PostMapping("/{teacherId}/delete-request")
-    public ResponseEntity<Object> deleteUserRequest(
-            @PathVariable(value = "teacherId") UUID teacherId
-    ) {
-
-        var userOptional = userService.findUserById(teacherId);
-        if (userOptional.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuário não encontrado!");
-        }
-
-        if (vCodeService.existsByUserIdAndType(
-                teacherId, VCodeEnum.ACCOUNT_DELETE)) {
-            var codeId = vCodeService.findByUserIdAndType(
-                    teacherId, VCodeEnum.ACCOUNT_DELETE).get().getId();
-            vCodeService.deleteById(codeId);
-        }
-
-        var code = CodeGenerator.generateCode();
-        var verificationCodeEntity = new VCodeEntity();
-        verificationCodeEntity.setCode(code);
-        verificationCodeEntity.setType(VCodeEnum.ACCOUNT_DELETE);
-        userService.setVCodeToUser(teacherId, verificationCodeEntity);
-        vCodeService.save(verificationCodeEntity);
-
-        mailService.sendEmail(new EmailEntity(
-                null,
-                userOptional.get().getEmail(),
-                "Requisição Para Deletar Sua Conta",
-                "Para confirmar a deleção de sua conta clique neste link ou copie e cole em seu navegador:" +
-                        String.format("%s/delete-confirm/%s?vCode=%s",
-                                Constants.APP_URL, teacherId, code),
-                null
-        ));
-
-        return ResponseEntity.ok("Requisição para deletar sua conta enviada!");
-
-    }
-
-    @DeleteMapping("/{teacherId}")
+    @DeleteMapping("/{userId}/delete")
     public ResponseEntity<Object> deleteUser(
-            @PathVariable(value = "teacherId") UUID teacherId,
-            @RequestParam(value = "vCode") Integer vCode
+            @PathVariable(value = "userId") UUID userId
     ) {
-
-        var userOptional = userService.findUserById(teacherId);
+        var userOptional = userService.findUserById(userId);
         if (userOptional.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuário não encontrado!");
         }
@@ -265,18 +152,7 @@ public class UserController {
                     .body("Você não pode deletar a conta de outros usuários!");
         }
 
-        var vCodeOptional = vCodeService.findByUserIdAndType(teacherId, VCodeEnum.ACCOUNT_DELETE);
-        if (vCodeOptional.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("Nenhuma requisição para deletar conta encontrada!");
-        }
-
-        if (!vCodeOptional.get().getCode().equals(vCode)) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Código de verificação errado!");
-        }
-
-        userService.deleteUserById(teacherId);
-        vCodeService.deleteById(vCodeOptional.get().getId());
+        userService.deleteUserById(userId);
 
         return ResponseEntity.ok("Conta deletada com sucesso!");
 
@@ -285,76 +161,9 @@ public class UserController {
     //DELETE
 
 
+
+
     //VERIFICATIONS
-
-    @PutMapping("/verify-account/{teacherId}")
-    public ResponseEntity<Object> verifyUserAccount(
-            @PathVariable(value = "teacherId") UUID teacherId,
-            @RequestParam(value = "vCode") Integer vCode
-    ) {
-        var userOptional = userService.findUserById(teacherId);
-        if (userOptional.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Conta não encontrada!");
-        }
-
-        var verificationCodeOptional = vCodeService.findByUserIdAndType(
-                teacherId, VCodeEnum.EMAIL_VERIFICATION);
-        if (verificationCodeOptional.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("Código de verificação não registrado para essa conta!");
-        }
-
-        if (!verificationCodeOptional.get().getCode().equals(vCode)) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Código de verificação errado!");
-        }
-
-        userOptional.get().setRole(RoleEnum.ROLE_TCHR);
-        userOptional.get().setVerified(true);
-        userService.user(userOptional.get());
-
-        vCodeService.deleteById(verificationCodeOptional.get().getId());
-
-        return ResponseEntity.ok("Conta verificada!");
-    }
-
-    @PostMapping("/resend-verification-email")
-    public ResponseEntity<Object> resendVerificationEmail(
-            @RequestParam(value = "teacherId", required = false) UUID teacherId,
-            @RequestParam(value = "teacherEmail", required = false) String email
-    ) {
-        Optional<UserEntity> userOptional;
-
-        if (teacherId != null) {
-            userOptional = userService.findUserById(teacherId);
-        } else if (email != null) {
-            userOptional = userService.findUserByEmail(email);
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
-
-        if (userOptional.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Conta não encontrada!");
-        }
-
-        var verificationCodeOptional = vCodeService.findByUserIdAndType(
-                userOptional.get().getId(), VCodeEnum.EMAIL_VERIFICATION);
-        if (verificationCodeOptional.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("Código de verificação não registrado para essa conta!");
-        }
-
-        mailService.sendEmail(new EmailEntity(
-                null,
-                userOptional.get().getEmail(),
-                "Confirme Sua Conta No Site TeacherNotesHub!",
-                String.format("Clique neste link para confirmar sua conta ou copie e cole no seu navegador: " +
-                                "%s/verify-account/%s?vCode=%s",
-                        Constants.APP_URL, teacherId, verificationCodeOptional.get().getCode()),
-                null
-        ));
-
-        return ResponseEntity.ok("Email de verificação reenviado!");
-    }
 
     @GetMapping("/{teacherId}/verified")
     public ResponseEntity<Object> isUserVerified(
@@ -364,9 +173,11 @@ public class UserController {
         if (userOptional.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(false);
         }
+
         if (!userOptional.get().isVerified()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(false);
         }
+
         return ResponseEntity.ok(true);
     }
 
@@ -376,7 +187,9 @@ public class UserController {
     //AUTHENTICATION
 
     @PostMapping("/login") //POST endpoint to authenticate a user
-    public ResponseEntity<Object> authenticateUser(@RequestBody @Valid AuthModel authModel) {
+    public ResponseEntity<Object> authenticateUser(
+            @RequestBody @Valid AuthModel authModel
+    ) {
         var authentication = userService.tryToAuthenticate(authModel, jwtService);
 
         switch (authentication.getStatus()) {
@@ -392,6 +205,23 @@ public class UserController {
             default -> {
                 return ResponseEntity.badRequest().build();
             }
+        }
+    }
+
+    @PostMapping("/check-auth")
+    public ResponseEntity<?> checkUserAuth(
+            @RequestBody @NotNull AuthReturnModel userAuth
+    ) {
+        try {
+            if (
+                    jwtService.tryToAuthenticate(userAuth.getToken().substring(7)) == null ||
+                    !userService.existsById(userAuth.getUserId())
+            ) {
+                return ResponseEntity.ok(false);
+            }
+            return ResponseEntity.ok(true);
+        } catch (Exception e) {
+            return ResponseEntity.ok(false);
         }
     }
 

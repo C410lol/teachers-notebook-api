@@ -36,7 +36,6 @@ public class LessonController {
     private final BNCCCodeService bnccCodeService;
 
     @PostMapping("/create") //POST endpoint to create a lesson entity
-    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> createLesson(
             @RequestParam(value = "notebookId") UUID notebookId,
             @RequestBody @Valid @NotNull LessonDto lessonDto
@@ -63,7 +62,6 @@ public class LessonController {
 
 
     @PostMapping("/{lessonId}/duplicate")
-    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> duplicateLesson(
             @PathVariable(value = "lessonId") UUID lessonId
     ) {
@@ -93,18 +91,17 @@ public class LessonController {
 
 
 
-    @GetMapping("/all") //GET endpoint to get all lessons
-    @PreAuthorize("hasRole('ROLE_ADM')")
-    public ResponseEntity<Object> getAllLessons() {
-        var lessons = lessonService.findAllLessons();
-        if (lessons.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
-        return ResponseEntity.ok(lessons);
-    }
+//    @GetMapping("/all") //GET endpoint to get all lessons
+//    @PreAuthorize("hasRole('ROLE_ADM')")
+//    public ResponseEntity<Object> getAllLessons() {
+//        var lessons = lessonService.findAllLessons();
+//        if (lessons.isEmpty()) {
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+//        }
+//        return ResponseEntity.ok(lessons);
+//    }
 
     @GetMapping("/all/{notebookId}") //GET endpoint to get all lessons
-    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> getAllLessonsByNotebookId(
             @PathVariable(value = "notebookId") UUID notebookId,
             @RequestParam(value = "pageNum", defaultValue = "0", required = false) String pageNum,
@@ -125,60 +122,44 @@ public class LessonController {
     }
 
     @GetMapping("/{lessonId}")
-    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> getLessonById(@PathVariable(value = "lessonId") UUID lessonId) {
         var lessonOptional = lessonService.findLessonById(lessonId);
         if (lessonOptional.isPresent()) {
-            var authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (
-                    !lessonOptional.get().getNotebook().getUser().getId().equals(authentication.getPrincipal()) &&
-                            !authentication.getAuthorities().contains(new SimpleGrantedAuthority(RoleEnum.ROLE_ADM.name()))
-            ) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-            }
             return ResponseEntity.ok(lessonOptional.get());
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Aula não encontrada!");
     }
 
     @PutMapping("/edit/{lessonId}")
-    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> editLesson(
             @PathVariable(value = "lessonId") UUID lessonId,
             @RequestBody @Valid LessonDto lessonDto) {
         var lessonOptional = lessonService.findLessonById(lessonId);
-        if (lessonOptional.isPresent()) {
-            var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            if (lessonOptional.get().getNotebook().getUser().getId().equals(authenticationId)) {
-                var lessonEntity = new LessonEntity();
-                BeanUtils.copyProperties(lessonOptional.get(), lessonEntity);
-                BeanUtils.copyProperties(lessonDto, lessonEntity);
-                if (lessonDto.getBnccCodes() != null && !lessonDto.getBnccCodes().isEmpty()) {
-                    if (!bnccCodeService.setBnccCodesToLesson(lessonDto.getBnccCodes(), lessonEntity)) {
-                        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Código BNCC não reconhecido!");
-                    }
-                }
-                lessonService.saveLesson(lessonEntity);
-                return ResponseEntity.ok().build();
-            }
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        if (lessonOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Aula não encontrada!");
         }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Aula não encontrada!");
+
+        var lessonEntity = new LessonEntity();
+        BeanUtils.copyProperties(lessonOptional.get(), lessonEntity);
+        BeanUtils.copyProperties(lessonDto, lessonEntity);
+        if (lessonDto.getBnccCodes() != null && !lessonDto.getBnccCodes().isEmpty()) {
+            if (!bnccCodeService.setBnccCodesToLesson(lessonDto.getBnccCodes(), lessonEntity)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Código BNCC não reconhecido!");
+            }
+        }
+        lessonService.saveLesson(lessonEntity);
+        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/delete/{lessonId}")
-    @PreAuthorize("hasAnyRole('ROLE_TCHR', 'ROLE_ADM')")
     public ResponseEntity<Object> deleteLesson(@PathVariable(value = "lessonId") UUID lessonId) {
         var lessonOptional = lessonService.findLessonById(lessonId);
-        if (lessonOptional.isPresent()) {
-            var authenticationId = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            if (lessonOptional.get().getNotebook().getUser().getId().equals(authenticationId)) {
-                lessonService.deleteLessonById(lessonId);
-                return ResponseEntity.ok().build();
-            }
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        if (lessonOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Aula não encontrada!");
         }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Aula não encontrada!");
+
+        lessonService.deleteLessonById(lessonId);
+        return ResponseEntity.ok().build();
     }
 
 }
