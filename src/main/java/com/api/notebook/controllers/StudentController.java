@@ -13,6 +13,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -99,19 +101,29 @@ public class StudentController {
     @GetMapping("/{institutionId}/all")
     public ResponseEntity<?> getAllByInstitutionAndClasse(
             @PathVariable(value = "institutionId") UUID institutionId,
-            @RequestParam(value = "classe", defaultValue = "%", required = false) String classe
+
+            @RequestParam(value = "classe", defaultValue = "%", required = false) String classe,
+
+            @RequestParam(value = "pageNum", defaultValue = "0", required = false) String pageNum,
+            @RequestParam(value = "direction", defaultValue = "asc", required = false) String direction,
+            @RequestParam(value = "sortBy", defaultValue = "number", required = false) String sortBy
     ) {
         var institutionOptional = institutionService.findById(institutionId);
         if (institutionOptional.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Instituição não encontrada.");
         }
 
-        var students = studentService.findAllByInstitutionAndClasse(institutionId, classe);
+        var pageable = PageRequest.of(
+                Integer.parseInt(pageNum),
+                30,
+                Sort.Direction.fromString(direction),
+                sortBy
+        );
+        var students = studentService.findAllByInstitutionAndClasse(institutionId, classe, pageable);
         if (students.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Nenhum aluno encontrado");
         }
 
-        students.sort(Comparator.comparing(StudentEntity::getNumber));
         return ResponseEntity.ok(students);
     }
 

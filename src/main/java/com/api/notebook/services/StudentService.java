@@ -9,6 +9,8 @@ import com.api.notebook.utils.StudentComparator;
 import com.api.notebook.repositories.StudentRepository;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -40,11 +42,16 @@ public class StudentService {
         return all;
     }
 
-    public List<StudentEntity> findAllByInstitutionAndClasse(
+    public Page<StudentEntity> findAllByInstitutionAndClasse(
             UUID institutionId,
-            String classe
+            String classe,
+            Pageable pageable
     ) {
-        return studentRepository.findAllByInstitutionIdAndClasse(institutionId, classe);
+        return studentRepository.findAllByInstitutionIdAndClasse(
+                institutionId,
+                classe,
+                pageable
+        );
     }
 
     public List<StudentEntity> findAllStudentsByClasse(ClassEnum classe) {

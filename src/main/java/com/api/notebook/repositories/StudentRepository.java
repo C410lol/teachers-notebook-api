@@ -2,6 +2,8 @@ package com.api.notebook.repositories;
 
 import com.api.notebook.enums.ClassEnum;
 import com.api.notebook.models.entities.StudentEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -20,9 +22,10 @@ public interface StudentRepository extends JpaRepository<StudentEntity, UUID> {
                     "classe = :classe",
             nativeQuery = true
     )
-    List<StudentEntity> findAllByInstitutionIdAndClasse(
+    Page<StudentEntity> findAllByInstitutionIdAndClasse(
             @Param(value = "institutionId") UUID institutionId,
-            @Param(value = "classe") String classe
+            @Param(value = "classe") String classe,
+            Pageable pageable
     );
 
     List<StudentEntity> findAllByClasse(ClassEnum classEnum);
