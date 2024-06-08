@@ -121,20 +121,6 @@ public class    NotebookController {
         return ResponseEntity.ok(studentsPerformance);
     }
 
-
-
-
-    @GetMapping("/{notebookId}/get-finished")
-    public ResponseEntity<?> getFinishedNotebookByNotebookId(
-            @PathVariable(value = "notebookId") UUID notebookId
-    ) {
-        var finishedNotebookOptional = finishedNotebookService.findByNotebookId(notebookId);
-        if (finishedNotebookOptional.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Caderneta não encontrada!");
-        }
-        return ResponseEntity.ok(finishedNotebookOptional.get());
-    }
-
     //READ
 
 
@@ -152,25 +138,6 @@ public class    NotebookController {
         BeanUtils.copyProperties(notebookDto, notebookEntity);
         notebookService.saveNotebook(notebookEntity);
         return ResponseEntity.ok().build();
-    }
-
-    @PutMapping("/{finishedStudentId}/edit-grade")
-    public ResponseEntity<?> editFinishedStudentGrade(
-            @PathVariable(value = "finishedStudentId") UUID finishedStudentId,
-            @RequestBody Double grade
-    ) {
-        var finishedStudentOptional = finishedStudentService.findById(finishedStudentId);
-        if (finishedStudentOptional.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Nota não encontrada!");
-        }
-
-        if (grade == null || grade < 0 || grade > 10 || grade.isNaN()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Insira uma nota válida!");
-        }
-
-        finishedStudentOptional.get().setFinalGrade(grade);
-        finishedStudentService.save(finishedStudentOptional.get());
-        return ResponseEntity.ok("Nota editada com sucesso!");
     }
 
     //EDIT
