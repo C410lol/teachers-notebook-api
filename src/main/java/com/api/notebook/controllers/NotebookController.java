@@ -2,14 +2,17 @@ package com.api.notebook.controllers;
 
 import com.api.notebook.enums.StatusEnum;
 import com.api.notebook.models.dtos.NotebookDto;
+import com.api.notebook.models.entities.FinishedNotebookEntity;
+import com.api.notebook.models.entities.FinishedStudentEntity;
 import com.api.notebook.models.entities.NotebookEntity;
-import com.api.notebook.services.NotebookService;
-import com.api.notebook.services.StudentService;
-import com.api.notebook.services.UserService;
+import com.api.notebook.models.entities.StudentEntity;
+import com.api.notebook.services.*;
 import com.api.notebook.utils.NotebookUtils;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -17,12 +20,13 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -34,6 +38,8 @@ public class    NotebookController {
     private final NotebookService notebookService;
     private final UserService userService;
     private final StudentService studentService;
+    private final FinishedNotebookService finishedNotebookService;
+    private final FinishedStudentService finishedStudentService;
 
 
     //CREATE
@@ -115,6 +121,20 @@ public class    NotebookController {
         return ResponseEntity.ok(studentsPerformance);
     }
 
+
+
+
+    @GetMapping("/{notebookId}/get-finished")
+    public ResponseEntity<?> getFinishedNotebookByNotebookId(
+            @PathVariable(value = "notebookId") UUID notebookId
+    ) {
+        var finishedNotebookOptional = finishedNotebookService.findByNotebookId(notebookId);
+        if (finishedNotebookOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Caderneta não encontrada!");
+        }
+        return ResponseEntity.ok(finishedNotebookOptional.get());
+    }
+
     //READ
 
 
@@ -132,6 +152,25 @@ public class    NotebookController {
         BeanUtils.copyProperties(notebookDto, notebookEntity);
         notebookService.saveNotebook(notebookEntity);
         return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/{finishedStudentId}/edit-grade")
+    public ResponseEntity<?> editFinishedStudentGrade(
+            @PathVariable(value = "finishedStudentId") UUID finishedStudentId,
+            @RequestBody Double grade
+    ) {
+        var finishedStudentOptional = finishedStudentService.findById(finishedStudentId);
+        if (finishedStudentOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Nota não encontrada!");
+        }
+
+        if (grade == null || grade < 0 || grade > 10 || grade.isNaN()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Insira uma nota válida!");
+        }
+
+        finishedStudentOptional.get().setFinalGrade(grade);
+        finishedStudentService.save(finishedStudentOptional.get());
+        return ResponseEntity.ok("Nota editada com sucesso!");
     }
 
     //EDIT
@@ -207,6 +246,19 @@ public class    NotebookController {
         }
 
         var students = studentService.findAllStudentsByClasse(notebookOptional.get().getClasse());
+
+        UUID finishedNotebookId = null;
+        if (notebookOptional.get().getFinishedNotebook() != null) {
+            finishedNotebookId = notebookOptional.get().getFinishedNotebook().getId();
+            clearFinishedNotebookStudents(finishedNotebookId);
+        }
+        setFinishedNotebook(
+                finishedNotebookId,
+                notebookOptional.get(),
+                students,
+                workTypeWeights
+        );
+
         var file = notebookService.finalizeNotebook(notebookOptional.get(), students, workTypeWeights);
         if (file != null) {
 
@@ -219,6 +271,54 @@ public class    NotebookController {
                     .body(file);
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Caderneta não encontrada!");
+    }
+
+    private void setFinishedNotebook(
+            @Nullable UUID finishedNotebookId,
+            @NotNull NotebookEntity notebook,
+            @NotNull List<StudentEntity> students,
+            Map<String, Double> workTypeWeights
+    ) {
+        var finishedNotebookEntity = new FinishedNotebookEntity();
+        finishedNotebookEntity.setId(finishedNotebookId);
+        finishedNotebookEntity.setNotebook(notebook);
+        finishedNotebookEntity.setTotalLessons(notebook.getLessonsQuantity());
+
+        List<FinishedStudentEntity> finishedStudents = new ArrayList<>();
+
+        students.forEach((student) -> {
+            var finishedStudent = new FinishedStudentEntity();
+            finishedStudent.setFinishedNotebook(finishedNotebookEntity);
+            finishedStudent.setStudent(student);
+
+            //SET STUDENT ABSENCES
+            var studentPerformance = NotebookUtils.getStudentPerformanceInLessons(notebook, student);
+            finishedStudent.setAbsences(studentPerformance.getAbsences());
+            finishedStudent.setPresencePercentage(studentPerformance.getAbsencesPercentage());
+
+            finishedNotebookEntity.setTotalLessons(studentPerformance.getTotalLessons());
+
+            //SET STUDENT FINAL GRADE
+            finishedStudent.setFinalGrade(NotebookUtils.getStudentPerformanceInWorks(
+                    notebook,
+                    student,
+                    workTypeWeights
+            ));
+
+            finishedStudents.add(finishedStudent);
+        });
+
+        finishedNotebookEntity.setFinishedStudents(finishedStudents);
+
+        finishedNotebookService.save(finishedNotebookEntity);
+    }
+
+    public void clearFinishedNotebookStudents(
+            UUID finishedNotebookId
+    ) {
+        var finishedNotebookOptional = finishedNotebookService.findById(finishedNotebookId);
+        finishedNotebookOptional.get().getFinishedStudents().clear();
+        finishedNotebookService.save(finishedNotebookOptional.get());
     }
 
     //FINALIZATION

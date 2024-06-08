@@ -58,6 +58,10 @@ public class NotebookEntity {
     @OneToMany(mappedBy = "notebook", cascade = {CascadeType.ALL})
     private List<WorkEntity> works;
 
+    @JsonIgnore
+    @OneToOne(mappedBy = "notebook", cascade = {CascadeType.ALL})
+    private FinishedNotebookEntity finishedNotebook;
+
 
 
 
