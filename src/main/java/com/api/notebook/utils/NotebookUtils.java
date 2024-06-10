@@ -2,14 +2,12 @@ package com.api.notebook.utils;
 
 import com.api.notebook.enums.PerformanceStatus;
 import com.api.notebook.models.StudentPerformanceModel;
-import com.api.notebook.models.entities.AttendanceEntity;
-import com.api.notebook.models.entities.LessonEntity;
-import com.api.notebook.models.entities.NotebookEntity;
-import com.api.notebook.models.entities.StudentEntity;
+import com.api.notebook.models.entities.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class NotebookUtils {
 
@@ -66,6 +64,39 @@ public class NotebookUtils {
                 Math.round(100 - absencesPercentage) + "%",
                 absencesStatus
         );
+    }
+
+    public static Double getStudentPerformanceInWorks(
+            NotebookEntity notebook,
+            StudentEntity student,
+            @NotNull Map<String, Double> workTypeWeights
+    ) {
+        var finalGrade = 0.0;
+
+        for (Map.Entry<String, Double> map:
+                workTypeWeights.entrySet()) {
+            if (map.getValue() <= 0) continue;
+            var gradesSum = 0.0;
+            var quantity = 0;
+
+            for (WorkEntity work:
+                    notebook.getWorks()) {
+                if(work.getType().toString().equals(map.getKey())) {
+                    for (GradeEntity grade:
+                            work.getGrades()) {
+                        if (grade.getStudent().equals(student)) {
+                            gradesSum += grade.getGrade();
+                            quantity++;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            finalGrade += (gradesSum * map.getValue()) / quantity;
+        }
+
+        return (double) Math.round((finalGrade / 10) * 2) / 2;
     }
 
 }

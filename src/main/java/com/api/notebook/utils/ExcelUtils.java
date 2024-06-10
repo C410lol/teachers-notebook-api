@@ -14,7 +14,6 @@ public class ExcelUtils {
     }
 
     public static void setSheetHeaderRowStyles(@NotNull Workbook workbook, @NotNull Row row) {
-
         var style = workbook.createCellStyle();
         var fontStyle = workbook.createFont();
         fontStyle.setBold(true);

@@ -48,4 +48,8 @@ public class StudentEntity {
     @OneToMany(mappedBy = "student", cascade = {CascadeType.ALL})
     private List<GradeEntity> grades;
 
+    @JsonIgnore
+    @OneToMany(mappedBy = "student", cascade = {CascadeType.ALL})
+    private List<FinishedStudentEntity> finishedStudents;
+
 }
