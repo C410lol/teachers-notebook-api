@@ -75,7 +75,7 @@ public class FinishedNotebookController {
 
         var headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-        headers.setContentDispositionFormData("attachment", "médias.xlsx");
+        headers.setContentDispositionFormData("attachment", classe.name() + ".xlsx");
 
         return ResponseEntity.ok()
                 .headers(headers)
