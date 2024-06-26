@@ -13,6 +13,8 @@ import org.springframework.core.io.ByteArrayResource;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.Year;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 public class FinishedNotebookUtils {
@@ -95,7 +97,7 @@ public class FinishedNotebookUtils {
     private static void createFinishedNotebookContainer(
             Sheet sheet,
             int cellNumber,
-            FinishedNotebookEntity finishedNotebook,
+            @NotNull FinishedNotebookEntity finishedNotebook,
             String classe,
             String bimester
     ) {
@@ -113,6 +115,7 @@ public class FinishedNotebookUtils {
 
         //Create students values
         var studentRow = 8;
+        finishedNotebook.getFinishedStudents().sort(Comparator.comparingInt(e -> e.getStudent().getNumber()));
         for (FinishedStudentEntity finishedStudent:
                 finishedNotebook.getFinishedStudents()) {
             createFinishedStudentValues(
